@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMB MEGAFONIAPP</title>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#121212;
+  color:white;
+  overflow:hidden; /* evita scroll global */
+}
+
+/* BARRA FIJA */
+.topbar{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:60px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 14px;
+  background:#1e1e1e;
+  z-index:1000;
+  box-sizing:border-box;
+}
+
+.title{
+  font-weight:bold;
+  text-transform:uppercase;
+}
+
+.btn{
+  font-size:24px;
+  cursor:pointer;
+  user-select:none;
+}
+
+/* CONTENIDO PRINCIPAL */
+#grid{
+  position:fixed;
+  top:60px;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  flex-direction:column;
+  padding:8px;
+  gap:10px;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+
+.pad{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  font-weight:bold;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+
+/* MENÚ */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.92);
+  display:none;
+  flex-direction:column;
+  z-index:2000;
+}
+
+.menuList{
+  flex:1;
+  overflow:auto;
+  padding:10px;
+}
+
+.menuItem{
+  margin:10px;
+  padding:18px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:bold;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+
+.menuItem.used{
+  opacity:0.35;
+}
+
+.back{
+  margin:10px;
+  padding:14px;
+  background:#555;
+  text-align:center;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+
+/* BOTÓN CENTRAL */
+.centerAdd{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#2a2a2a;
+  padding:30px 40px;
+  border-radius:16px;
+  text-align:center;
+  cursor:pointer;
+  font-weight:bold;
+  text-transform:uppercase;
+  display:none;
+  z-index:1500;
+}
+
+.centerAdd span{
+  font-size:42px;
+  display:block;
+}
+</style>
+</head>
+
+<body>
+
+<!-- BARRA FIJA -->
+<div class="topbar">
+  <div class="btn" onclick="openMenu()">＋</div>
+  <div class="title">TMB MEGAFONIAPP</div>
+  <div></div>
+</div>
+
+<!-- BOTÓN CENTRAL -->
+<div id="centerAdd" class="centerAdd" onclick="openMenu()">
+  <span>＋</span>
+  AÑADIR AUDIO
+</div>
+
+<!-- GRID -->
+<div id="grid"></div>
+
+<!-- MENÚ -->
+<div id="menu" class="overlay">
+  <div id="menuList" class="menuList"></div>
+  <div class="back" onclick="closeMenu()">ATRÁS</div>
+</div>
+
+<script>
+
+/* CATÁLOGO */
+const items = [
+  { id:"r1", name:"SERVICIO FINALIZADO FONDO", color:"#d32f2f" },
+  { id:"r2", name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO", color:"#c62828" },
+
+  { id:"p1", name:"SERVICIO PARAL·LEL FINALIZADO", color:"#7e57c2" },
+  { id:"p2", name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO", color:"#673ab7" },
+
+  { id:"g1", name:"SERVICIO TRINITAT NOVA FINALIZADO", color:"#2e7d32" },
+  { id:"g2", name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO", color:"#1b5e20" },
+
+  { id:"y1", name:"SERVICIO LA PAU FINALIZADO", color:"#fdd835" },
+  { id:"y2", name:"SERVICIO TRINITAT NOVA 2 FINALIZADO", color:"#fbc02d" },
+
+  { id:"b1", name:"SERVICIO VALL D'HEBRON FINALIZADO", color:"#1976d2" },
+  { id:"b2", name:"SERVICIO CORNELLA CENTRE FINALIZADO", color:"#1565c0" },
+
+  { id:"o1", name:"SOLICITUD SEGURIDAD", color:"#ff9800" },
+
+  { id:"m1", name:"SOLICITUD AAC", color:"#800020" },
+  { id:"m2", name:"CLIENTES NO SE ACERQUEN AL BORDE", color:"#5d4037" },
+  { id:"m3", name:"CLIENTES SE REPARTAN AL ANDÉN", color:"#009688" }
+];
+
+let active = JSON.parse(localStorage.getItem("active")) || [];
+
+function save(){
+  localStorage.setItem("active", JSON.stringify(active));
+}
+
+/* RENDER PRINCIPAL */
+function render(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  active.forEach(id=>{
+    const it = items.find(x=>x.id === id);
+    if(!it) return;
+
+    const div = document.createElement("div");
+    div.className = "pad";
+    div.style.background = it.color;
+    div.textContent = it.name;
+
+    grid.appendChild(div);
+  });
+
+  document.getElementById("centerAdd").style.display =
+    active.length === 0 ? "block" : "none";
+}
+
+/* MENÚ */
+function openMenu(){
+  document.getElementById("menu").style.display = "flex";
+
+  const list = document.getElementById("menuList");
+  list.innerHTML = "";
+
+  items.forEach(it=>{
+    const on = active.includes(it.id);
+
+    const div = document.createElement("div");
+    div.className = "menuItem" + (on ? " used" : "");
+    div.style.background = it.color;
+    div.textContent = it.name;
+
+    div.onclick = ()=>{
+      if(on){
+        active = active.filter(x=>x !== it.id);
+      } else {
+        active.push(it.id);
+      }
+      save();
+      render();
+      openMenu();
+    };
+
+    list.appendChild(div);
+  });
+}
+
+function closeMenu(){
+  document.getElementById("menu").style.display = "none";
+}
+
+render();
+
+</script>
+
+</body>
+</html>
