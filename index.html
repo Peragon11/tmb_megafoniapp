@@ -11,10 +11,10 @@ body{
   font-family:sans-serif;
   background:#121212;
   color:white;
-  overflow:hidden; /* evita scroll global */
+  overflow:hidden;
 }
 
-/* BARRA FIJA */
+/* TOPBAR FIJA */
 .topbar{
   position:fixed;
   top:0;
@@ -41,7 +41,7 @@ body{
   user-select:none;
 }
 
-/* CONTENIDO PRINCIPAL */
+/* GRID PRINCIPAL */
 #grid{
   position:fixed;
   top:60px;
@@ -53,9 +53,9 @@ body{
   padding:8px;
   gap:10px;
   box-sizing:border-box;
-  overflow:hidden;
 }
 
+/* BOTONES */
 .pad{
   flex:1;
   display:flex;
@@ -64,7 +64,8 @@ body{
   border-radius:16px;
   font-weight:bold;
   text-transform:uppercase;
-  cursor:pointer;
+  cursor:grab;
+  user-select:none;
 }
 
 /* MENÚ */
@@ -108,7 +109,7 @@ body{
   text-transform:uppercase;
 }
 
-/* BOTÓN CENTRAL */
+/* BOTÓN CENTRAL (RESTAURADO) */
 .centerAdd{
   position:fixed;
   top:50%;
@@ -134,23 +135,19 @@ body{
 
 <body>
 
-<!-- BARRA FIJA -->
 <div class="topbar">
   <div class="btn" onclick="openMenu()">＋</div>
   <div class="title">TMB MEGAFONIAPP</div>
   <div></div>
 </div>
 
-<!-- BOTÓN CENTRAL -->
 <div id="centerAdd" class="centerAdd" onclick="openMenu()">
   <span>＋</span>
   AÑADIR AUDIO
 </div>
 
-<!-- GRID -->
 <div id="grid"></div>
 
-<!-- MENÚ -->
 <div id="menu" class="overlay">
   <div id="menuList" class="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
@@ -158,7 +155,6 @@ body{
 
 <script>
 
-/* CATÁLOGO */
 const items = [
   { id:"r1", name:"SERVICIO FINALIZADO FONDO", color:"#d32f2f" },
   { id:"r2", name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO", color:"#c62828" },
@@ -188,13 +184,15 @@ function save(){
   localStorage.setItem("active", JSON.stringify(active));
 }
 
-/* RENDER PRINCIPAL */
+/* =========================
+   FIX: GRID + BOTÓN VACÍO
+========================= */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  active.forEach(id=>{
-    const it = items.find(x=>x.id === id);
+  active.forEach((id, index)=>{
+    const it = items.find(x => x.id === id);
     if(!it) return;
 
     const div = document.createElement("div");
@@ -202,16 +200,56 @@ function render(){
     div.style.background = it.color;
     div.textContent = it.name;
 
+    div.draggable = true;
+
+    div.addEventListener("dragstart", e=>{
+      e.dataTransfer.setData("from", index);
+    });
+
+    div.addEventListener("dragover", e=>{
+      e.preventDefault();
+    });
+
+    div.addEventListener("drop", e=>{
+      e.preventDefault();
+      const from = parseInt(e.dataTransfer.getData("from"));
+      const to = index;
+
+      if(from === to) return;
+
+      const tmp = active[from];
+      active[from] = active[to];
+      active[to] = tmp;
+
+      save();
+      render();
+    });
+
     grid.appendChild(div);
   });
 
-  document.getElementById("centerAdd").style.display =
-    active.length === 0 ? "block" : "none";
+  updateCenter();
 }
 
-/* MENÚ */
+/* =========================
+   BOTÓN + SOLO SI VACÍO
+========================= */
+function updateCenter(){
+  const c = document.getElementById("centerAdd");
+
+  if(active.length === 0){
+    c.style.display = "block";
+  }else{
+    c.style.display = "none";
+  }
+}
+
+/* =========================
+   MENÚ
+========================= */
 function openMenu(){
-  document.getElementById("menu").style.display = "flex";
+  const menu = document.getElementById("menu");
+  menu.style.display = "flex";
 
   const list = document.getElementById("menuList");
   list.innerHTML = "";
@@ -226,10 +264,11 @@ function openMenu(){
 
     div.onclick = ()=>{
       if(on){
-        active = active.filter(x=>x !== it.id);
-      } else {
+        active = active.filter(x => x !== it.id);
+      }else{
         active.push(it.id);
       }
+
       save();
       render();
       openMenu();
