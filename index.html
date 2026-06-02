@@ -14,7 +14,6 @@ body{
   overflow:hidden;
 }
 
-/* TOPBAR FIJA */
 .topbar{
   position:fixed;
   top:0;
@@ -26,7 +25,7 @@ body{
   align-items:center;
   padding:0 14px;
   background:#1e1e1e;
-  z-index:1000;
+  z-index:2000;
   box-sizing:border-box;
 }
 
@@ -35,13 +34,18 @@ body{
   text-transform:uppercase;
 }
 
-.btn{
+.leftIcons{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.iconBtn{
   font-size:24px;
   cursor:pointer;
   user-select:none;
 }
 
-/* GRID PRINCIPAL */
 #grid{
   position:fixed;
   top:60px;
@@ -55,7 +59,6 @@ body{
   box-sizing:border-box;
 }
 
-/* BOTONES */
 .pad{
   flex:1;
   display:flex;
@@ -64,18 +67,31 @@ body{
   border-radius:16px;
   font-weight:bold;
   text-transform:uppercase;
-  cursor:grab;
+  position:relative;
   user-select:none;
 }
 
-/* MENÚ */
+.handle{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  display:none;
+  font-size:22px;
+  cursor:grab;
+}
+
+.dragMode .handle{
+  display:block;
+}
+
 .overlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.92);
   display:none;
   flex-direction:column;
-  z-index:2000;
+  z-index:3000;
 }
 
 .menuList{
@@ -109,7 +125,6 @@ body{
   text-transform:uppercase;
 }
 
-/* BOTÓN CENTRAL (RESTAURADO) */
 .centerAdd{
   position:fixed;
   top:50%;
@@ -136,7 +151,10 @@ body{
 <body>
 
 <div class="topbar">
-  <div class="btn" onclick="openMenu()">＋</div>
+  <div class="leftIcons">
+    <div class="iconBtn" onclick="openMenu()">＋</div>
+    <div class="iconBtn" onclick="toggleDragMode()">☰</div>
+  </div>
   <div class="title">TMB MEGAFONIAPP</div>
   <div></div>
 </div>
@@ -154,6 +172,8 @@ body{
 </div>
 
 <script>
+
+const MAX_VISIBLE = 8;
 
 const items = [
   { id:"r1", name:"SERVICIO FINALIZADO FONDO", color:"#d32f2f" },
@@ -179,20 +199,28 @@ const items = [
 ];
 
 let active = JSON.parse(localStorage.getItem("active")) || [];
+let dragMode = false;
 
 function save(){
   localStorage.setItem("active", JSON.stringify(active));
 }
 
 /* =========================
-   FIX: GRID + BOTÓN VACÍO
+   LIMITADOR 8 BOTONES
+========================= */
+function canAdd(){
+  return active.length < MAX_VISIBLE;
+}
+
+/* =========================
+   RENDER
 ========================= */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
   active.forEach((id, index)=>{
-    const it = items.find(x => x.id === id);
+    const it = items.find(x=>x.id===id);
     if(!it) return;
 
     const div = document.createElement("div");
@@ -200,52 +228,46 @@ function render(){
     div.style.background = it.color;
     div.textContent = it.name;
 
-    div.draggable = true;
+    const handle = document.createElement("div");
+    handle.className = "handle";
+    handle.textContent = "☰";
+    div.appendChild(handle);
 
-    div.addEventListener("dragstart", e=>{
-      e.dataTransfer.setData("from", index);
-    });
+    if(dragMode){
+      div.draggable = true;
 
-    div.addEventListener("dragover", e=>{
-      e.preventDefault();
-    });
+      div.addEventListener("dragstart", e=>{
+        e.dataTransfer.setData("from", index);
+      });
 
-    div.addEventListener("drop", e=>{
-      e.preventDefault();
-      const from = parseInt(e.dataTransfer.getData("from"));
-      const to = index;
+      div.addEventListener("dragover", e=>e.preventDefault());
 
-      if(from === to) return;
+      div.addEventListener("drop", e=>{
+        e.preventDefault();
 
-      const tmp = active[from];
-      active[from] = active[to];
-      active[to] = tmp;
+        const from = parseInt(e.dataTransfer.getData("from"));
+        const to = index;
 
-      save();
-      render();
-    });
+        const tmp = active[from];
+        active[from] = active[to];
+        active[to] = tmp;
+
+        save();
+        render();
+      });
+    }
 
     grid.appendChild(div);
   });
 
-  updateCenter();
+  document.body.classList.toggle("dragMode", dragMode);
+
+  document.getElementById("centerAdd").style.display =
+    active.length === 0 ? "block" : "none";
 }
 
 /* =========================
-   BOTÓN + SOLO SI VACÍO
-========================= */
-function updateCenter(){
-  const c = document.getElementById("centerAdd");
-
-  if(active.length === 0){
-    c.style.display = "block";
-  }else{
-    c.style.display = "none";
-  }
-}
-
-/* =========================
-   MENÚ
+   MENÚ CON LÍMITE
 ========================= */
 function openMenu(){
   const menu = document.getElementById("menu");
@@ -263,9 +285,11 @@ function openMenu(){
     div.textContent = it.name;
 
     div.onclick = ()=>{
+
       if(on){
-        active = active.filter(x => x !== it.id);
+        active = active.filter(x=>x!==it.id);
       }else{
+        if(!canAdd()) return; // BLOQUEO SI 8
         active.push(it.id);
       }
 
@@ -280,6 +304,11 @@ function openMenu(){
 
 function closeMenu(){
   document.getElementById("menu").style.display = "none";
+}
+
+function toggleDragMode(){
+  dragMode = !dragMode;
+  render();
 }
 
 render();
