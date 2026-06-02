@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TMB MEGAFONIAPP</title>
+<title>MEGAFONIAPP</title>
 
 <style>
 body{
@@ -14,6 +14,7 @@ body{
   overflow:hidden;
 }
 
+/* TOP BAR */
 .topbar{
   position:fixed;
   top:0;
@@ -21,23 +22,24 @@ body{
   right:0;
   height:60px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  padding:0 14px;
+  justify-content:space-between;
+  padding:0 15px;
   background:#1e1e1e;
-  z-index:2000;
+  z-index:1000;
 }
 
-.leftIcons{
+.left{
   display:flex;
   gap:12px;
 }
 
-.iconBtn{
-  font-size:24px;
+.icon{
+  font-size:22px;
   cursor:pointer;
 }
 
+/* GRID */
 #grid{
   position:fixed;
   top:60px;
@@ -50,6 +52,7 @@ body{
   padding:10px;
 }
 
+/* BOTONES */
 .pad{
   flex:1;
   display:flex;
@@ -58,6 +61,7 @@ body{
   border-radius:16px;
   font-weight:bold;
   position:relative;
+  user-select:none;
 }
 
 .handle{
@@ -68,40 +72,12 @@ body{
   display:none;
 }
 
-.dragMode .handle{
+.drag .handle{
   display:block;
 }
 
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.9);
-  display:none;
-  flex-direction:column;
-  z-index:3000;
-}
-
-.menuItem{
-  margin:10px;
-  padding:18px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-}
-
-.menuItem.used{
-  opacity:0.3;
-}
-
-.back{
-  margin:10px;
-  padding:14px;
-  background:#555;
-  text-align:center;
-  border-radius:10px;
-}
-
-.centerAdd{
+/* BOTON CENTRAL */
+#addCenter{
   position:fixed;
   top:50%;
   left:50%;
@@ -109,7 +85,38 @@ body{
   background:#2a2a2a;
   padding:30px;
   border-radius:16px;
-  z-index:2500;
+  z-index:2000;
+  cursor:pointer;
+}
+
+/* MENU */
+#menu{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  flex-direction:column;
+  z-index:3000;
+}
+
+.item{
+  margin:10px;
+  padding:18px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:bold;
+}
+
+.item.used{
+  opacity:0.3;
+}
+
+.back{
+  margin:10px;
+  padding:15px;
+  background:#444;
+  text-align:center;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -117,59 +124,69 @@ body{
 <body>
 
 <div class="topbar">
-  <div class="leftIcons" id="leftIcons">
-    <div class="iconBtn" onclick="openMenu()">＋</div>
+  <div class="left" id="leftIcons">
+    <div class="icon" onclick="openMenu()">＋</div>
   </div>
+  <div>MEGAFONIAPP</div>
+  <div></div>
 </div>
 
-<div id="centerAdd" class="centerAdd" onclick="openMenu()">＋ AÑADIR</div>
+<div id="addCenter" onclick="openMenu()">＋ AÑADIR</div>
 
 <div id="grid"></div>
 
-<div id="menu" class="overlay">
+<div id="menu">
   <div id="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
 <script>
 
-const MAX_VISIBLE = 8;
+const MAX = 8;
 
 const items = [
-  {id:"1", name:"ROJO 1", color:"#d32f2f"},
-  {id:"2", name:"ROJO 2", color:"#c62828"},
-  {id:"3", name:"AMARILLO 1", color:"#fdd835"},
-  {id:"4", name:"AMARILLO 2", color:"#fbc02d"},
-  {id:"5", name:"AZUL 1", color:"#1976d2"},
-  {id:"6", name:"AZUL 2", color:"#1565c0"},
+  {id:"1",name:"ROJO 1",color:"#d32f2f"},
+  {id:"2",name:"ROJO 2",color:"#c62828"},
+  {id:"3",name:"VERDE",color:"#2e7d32"},
+  {id:"4",name:"AZUL",color:"#1976d2"},
+  {id:"5",name:"AMARILLO",color:"#fbc02d"},
+  {id:"6",name:"NARANJA",color:"#ff9800"},
+  {id:"7",name:"MARRON",color:"#5d4037"},
+  {id:"8",name:"GRIS",color:"#616161"},
+  {id:"9",name:"EXTRA",color:"#9c27b0"}
 ];
 
 let active = JSON.parse(localStorage.getItem("active")) || [];
 let dragMode = false;
+let dragging = null;
 
-let touchIndex = null;
-
+/* GUARDAR */
 function save(){
-  localStorage.setItem("active", JSON.stringify(active));
+  localStorage.setItem("active",JSON.stringify(active));
 }
 
-function renderDragIcon(){
-  const container = document.getElementById("leftIcons");
-  const existing = document.getElementById("dragBtn");
-  if(existing) existing.remove();
+/* ICONO ORDEN */
+function renderDragBtn(){
+  const left = document.getElementById("leftIcons");
+  const old = document.getElementById("dragBtn");
+  if(old) old.remove();
 
   if(active.length >= 2){
     const btn = document.createElement("div");
     btn.id="dragBtn";
-    btn.className="iconBtn";
+    btn.className="icon";
     btn.textContent="☰";
-    btn.onclick=()=>{ dragMode=!dragMode; render(); };
-    container.appendChild(btn);
+    btn.onclick=()=>{
+      dragMode = !dragMode;
+      render();
+    };
+    left.appendChild(btn);
   }else{
     dragMode=false;
   }
 }
 
+/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
@@ -182,68 +199,82 @@ function render(){
     div.style.background=it.color;
     div.textContent=it.name;
 
-    const handle=document.createElement("div");
+    const handle = document.createElement("div");
     handle.className="handle";
     handle.textContent="☰";
     div.appendChild(handle);
 
-    /* TOUCH DRAG */
+    /* DRAG TOUCH + MOUSE */
     if(dragMode){
 
-      div.addEventListener("touchstart", ()=>{
-        touchIndex=index;
-      });
+      div.onmousedown = ()=> dragging=index;
 
-      div.addEventListener("touchmove", (e)=>{
-        e.preventDefault();
+      div.onmousemove = (e)=>{
+        if(dragging===null) return;
+        const el = document.elementFromPoint(e.clientX,e.clientY);
+        move(el,index);
+      };
 
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      div.ontouchstart = ()=> dragging=index;
 
-        if(!element) return;
+      div.ontouchmove = (e)=>{
+        const t = e.touches[0];
+        const el = document.elementFromPoint(t.clientX,t.clientY);
+        move(el,index);
+      };
 
-        const target = element.closest(".pad");
-        if(!target) return;
-
-        const nodes = [...document.querySelectorAll(".pad")];
-        const newIndex = nodes.indexOf(target);
-
-        if(newIndex !== touchIndex){
-          const tmp = active[touchIndex];
-          active[touchIndex] = active[newIndex];
-          active[newIndex] = tmp;
-          touchIndex = newIndex;
-          render();
-        }
-      });
-
-      div.addEventListener("touchend", ()=>{
-        save();
-        touchIndex=null;
-      });
+      div.onmouseup = stop;
+      div.ontouchend = stop;
     }
 
     grid.appendChild(div);
   });
 
-  document.body.classList.toggle("dragMode", dragMode);
+  document.body.classList.toggle("drag",dragMode);
 
-  document.getElementById("centerAdd").style.display =
-    active.length === 0 ? "block" : "none";
+  document.getElementById("addCenter").style.display =
+    active.length===0 ? "block":"none";
 
-  renderDragIcon();
+  renderDragBtn();
 }
 
+/* MOVER */
+function move(el,from){
+  if(!el) return;
+  const target = el.closest(".pad");
+  if(!target) return;
+
+  const nodes = [...document.querySelectorAll(".pad")];
+  const to = nodes.indexOf(target);
+
+  if(to===-1 || to===from) return;
+
+  const tmp = active[from];
+  active[from]=active[to];
+  active[to]=tmp;
+
+  dragging = to;
+
+  render();
+}
+
+/* FIN DRAG */
+function stop(){
+  dragging=null;
+  save();
+}
+
+/* MENU */
 function openMenu(){
   document.getElementById("menu").style.display="flex";
-  const list=document.getElementById("menuList");
+  const list = document.getElementById("menuList");
   list.innerHTML="";
 
   items.forEach(it=>{
-    const on=active.includes(it.id);
+    const on = active.includes(it.id);
 
     const div=document.createElement("div");
-    div.className="menuItem"+(on?" used":"");
+    div.className="item"+(on?" used":"");
     div.style.background=it.color;
     div.textContent=it.name;
 
@@ -251,7 +282,7 @@ function openMenu(){
       if(on){
         active=active.filter(x=>x!==it.id);
       }else{
-        if(active.length>=MAX_VISIBLE) return;
+        if(active.length>=MAX) return;
         active.push(it.id);
       }
       save();
@@ -267,6 +298,7 @@ function closeMenu(){
   document.getElementById("menu").style.display="none";
 }
 
+/* INIT */
 render();
 
 </script>
