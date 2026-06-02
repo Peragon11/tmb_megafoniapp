@@ -52,23 +52,14 @@ body{
   font-weight:bold;
   position:relative;
   user-select:none;
-  touch-action:none;
+  transition:transform .15s ease, opacity .15s ease;
 }
 
-.handle{
-  position:absolute;
-  left:10px;
-  top:50%;
-  transform:translateY(-50%);
-  display:none;
-}
-
-.editMode .handle{
-  display:block;
-}
-
-.dragging{
-  opacity:0.6;
+/* selección visual */
+.selected{
+  transform:scale(0.92);
+  opacity:0.7;
+  outline:3px solid white;
 }
 
 #addCenter{
@@ -82,6 +73,7 @@ body{
   cursor:pointer;
   z-index:2000;
   font-weight:bold;
+  text-align:center;
 }
 
 #menu{
@@ -112,6 +104,18 @@ body{
   text-align:center;
   border-radius:10px;
 }
+
+#help{
+  position:fixed;
+  bottom:15px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.8);
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:13px;
+  display:none;
+}
 </style>
 </head>
 
@@ -132,6 +136,8 @@ body{
   <div id="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
+
+<div id="help">Selecciona un botón y luego otro para intercambiarlos</div>
 
 <script>
 
@@ -156,26 +162,23 @@ const items=[
 
 let active=JSON.parse(localStorage.getItem("active"))||[];
 let editMode=false;
-
-let dragIndex=null;
-let draggingEl=null;
+let selectedIndex=null;
 
 function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* EDIT BUTTON */
-function updateEdit(){
-const btn=document.getElementById("editBtn");
-btn.style.display=active.length>=2?"block":"none";
-if(active.length<2) editMode=false;
-document.body.classList.toggle("editMode",editMode);
-}
-
-/* TOGGLE EDIT */
+/* EDIT MODE */
 function toggleEdit(){
 editMode=!editMode;
-updateEdit();
+selectedIndex=null;
+
+document.getElementById("help").style.display =
+editMode ? "block" : "none";
+
+document.getElementById("editBtn").style.color =
+editMode ? "#00bcd4" : "white";
+
 render();
 }
 
@@ -184,7 +187,26 @@ function swap(a,b){
 const tmp=active[a];
 active[a]=active[b];
 active[b]=tmp;
+save();
+}
+
+/* CLICK SYSTEM (CLAVE NUEVA) */
+function handleClick(i){
+if(!editMode) return;
+
+if(selectedIndex===null){
+selectedIndex=i;
+}else{
+if(selectedIndex===i){
+selectedIndex=null;
 render();
+return;
+}
+
+swap(selectedIndex,i);
+selectedIndex=null;
+render();
+}
 }
 
 /* RENDER */
@@ -200,47 +222,11 @@ div.className="pad";
 div.style.background=it.color;
 div.textContent=it.name;
 
-/* HANDLE */
-if(editMode){
-const h=document.createElement("div");
-h.className="handle";
-h.textContent="☰";
-div.appendChild(h);
-
-/* PC DRAG */
-div.draggable=true;
-div.ondragstart=()=>dragIndex=i;
-div.ondragover=e=>e.preventDefault();
-div.ondrop=()=>swap(dragIndex,i);
-
-/* MOBILE REAL FIX */
-div.ontouchstart=(e)=>{
-dragIndex=i;
-draggingEl=div;
-div.classList.add("dragging");
-};
-
-div.ontouchmove=(e)=>{
-const t=e.touches[0];
-const el=document.elementFromPoint(t.clientX,t.clientY);
-const target=el?.closest(".pad");
-if(!target) return;
-
-const nodes=[...document.querySelectorAll(".pad")];
-const to=nodes.indexOf(target);
-
-if(to!==dragIndex && to>=0){
-swap(dragIndex,to);
-dragIndex=to;
+if(editMode && selectedIndex===i){
+div.classList.add("selected");
 }
-};
 
-div.ontouchend=()=>{
-if(draggingEl) draggingEl.classList.remove("dragging");
-draggingEl=null;
-save();
-};
-}
+div.onclick=()=>handleClick(i);
 
 grid.appendChild(div);
 });
@@ -248,7 +234,8 @@ grid.appendChild(div);
 document.getElementById("addCenter").style.display=
 active.length===0?"block":"none";
 
-updateEdit();
+document.getElementById("editBtn").style.display=
+active.length>=2?"block":"none";
 }
 
 /* MENU */
