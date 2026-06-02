@@ -31,6 +31,7 @@ body{
 .leftIcons{display:flex;gap:12px;}
 .iconBtn{font-size:24px;cursor:pointer;}
 
+/* GRID */
 #grid{
   position:fixed;
   top:60px;
@@ -50,15 +51,16 @@ body{
   justify-content:center;
   border-radius:16px;
   font-weight:bold;
-  position:relative;
   user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
   transition:transform .15s ease, opacity .15s ease;
 }
 
-/* selección visual */
+/* selección */
 .selected{
   transform:scale(0.92);
-  opacity:0.7;
+  opacity:0.6;
   outline:3px solid white;
 }
 
@@ -73,7 +75,6 @@ body{
   cursor:pointer;
   z-index:2000;
   font-weight:bold;
-  text-align:center;
 }
 
 #menu{
@@ -137,7 +138,7 @@ body{
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
-<div id="help">Selecciona un botón y luego otro para intercambiarlos</div>
+<div id="help">Toca un botón y luego otro para intercambiarlos</div>
 
 <script>
 
@@ -162,22 +163,19 @@ const items=[
 
 let active=JSON.parse(localStorage.getItem("active"))||[];
 let editMode=false;
-let selectedIndex=null;
+let selected=null;
 
 function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* EDIT MODE */
+/* EDIT */
 function toggleEdit(){
 editMode=!editMode;
-selectedIndex=null;
+selected=null;
 
 document.getElementById("help").style.display =
 editMode ? "block" : "none";
-
-document.getElementById("editBtn").style.color =
-editMode ? "#00bcd4" : "white";
 
 render();
 }
@@ -190,21 +188,21 @@ active[b]=tmp;
 save();
 }
 
-/* CLICK SYSTEM (CLAVE NUEVA) */
-function handleClick(i){
+/* SELECCIÓN */
+function select(i){
 if(!editMode) return;
 
-if(selectedIndex===null){
-selectedIndex=i;
+if(selected===null){
+selected=i;
 }else{
-if(selectedIndex===i){
-selectedIndex=null;
+if(selected===i){
+selected=null;
 render();
 return;
 }
 
-swap(selectedIndex,i);
-selectedIndex=null;
+swap(selected,i);
+selected=null;
 render();
 }
 }
@@ -222,11 +220,16 @@ div.className="pad";
 div.style.background=it.color;
 div.textContent=it.name;
 
-if(editMode && selectedIndex===i){
+/* estado visual */
+if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-div.onclick=()=>handleClick(i);
+/* 🔥 FIX REAL MÓVIL + PC */
+div.addEventListener("pointerdown",(e)=>{
+e.preventDefault();
+select(i);
+});
 
 grid.appendChild(div);
 });
@@ -253,7 +256,7 @@ div.className="menuItem"+(on?" used":"");
 div.style.background=it.color;
 div.textContent=it.name;
 
-div.onclick=()=>{
+div.addEventListener("pointerdown",()=>{
 if(on){
 active=active.filter(x=>x!==it.id);
 }else{
@@ -263,7 +266,7 @@ active.push(it.id);
 save();
 render();
 openMenu();
-};
+});
 
 list.appendChild(div);
 });
