@@ -28,15 +28,9 @@ body{
   z-index:2000;
 }
 
-.title{
-  font-weight:bold;
-  text-transform:uppercase;
-}
-
 .leftIcons{
   display:flex;
   gap:12px;
-  align-items:center;
 }
 
 .iconBtn{
@@ -47,14 +41,13 @@ body{
 #grid{
   position:fixed;
   top:60px;
+  bottom:0;
   left:0;
   right:0;
-  bottom:0;
   display:flex;
   flex-direction:column;
-  padding:8px;
   gap:10px;
-  z-index:1;
+  padding:10px;
 }
 
 .pad{
@@ -64,7 +57,6 @@ body{
   justify-content:center;
   border-radius:16px;
   font-weight:bold;
-  text-transform:uppercase;
   position:relative;
 }
 
@@ -83,16 +75,10 @@ body{
 .overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.92);
+  background:rgba(0,0,0,0.9);
   display:none;
   flex-direction:column;
   z-index:3000;
-}
-
-.menuList{
-  flex:1;
-  overflow:auto;
-  padding:10px;
 }
 
 .menuItem{
@@ -101,11 +87,10 @@ body{
   border-radius:12px;
   text-align:center;
   font-weight:bold;
-  cursor:pointer;
 }
 
 .menuItem.used{
-  opacity:0.35;
+  opacity:0.3;
 }
 
 .back{
@@ -114,7 +99,6 @@ body{
   background:#555;
   text-align:center;
   border-radius:10px;
-  cursor:pointer;
 }
 
 .centerAdd{
@@ -123,16 +107,9 @@ body{
   left:50%;
   transform:translate(-50%,-50%);
   background:#2a2a2a;
-  padding:30px 40px;
+  padding:30px;
   border-radius:16px;
-  text-align:center;
-  cursor:pointer;
-  font-weight:bold;
-  z-index:2500; /* 🔥 por encima de todo */
-}
-
-.centerAdd span{
-  font-size:42px;
+  z-index:2500;
 }
 </style>
 </head>
@@ -143,19 +120,14 @@ body{
   <div class="leftIcons" id="leftIcons">
     <div class="iconBtn" onclick="openMenu()">＋</div>
   </div>
-  <div class="title">TMB MEGAFONIAPP</div>
-  <div></div>
 </div>
 
-<div id="centerAdd" class="centerAdd" onclick="openMenu()">
-  <span>＋</span>
-  AÑADIR AUDIO
-</div>
+<div id="centerAdd" class="centerAdd" onclick="openMenu()">＋ AÑADIR</div>
 
 <div id="grid"></div>
 
 <div id="menu" class="overlay">
-  <div id="menuList" class="menuList"></div>
+  <div id="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
@@ -164,30 +136,23 @@ body{
 const MAX_VISIBLE = 8;
 
 const items = [
-  { id:"r1", name:"SERVICIO FINALIZADO FONDO", color:"#d32f2f" },
-  { id:"r2", name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO", color:"#c62828" },
-  { id:"p1", name:"SERVICIO PARAL·LEL FINALIZADO", color:"#7e57c2" },
-  { id:"p2", name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO", color:"#673ab7" },
-  { id:"g1", name:"SERVICIO TRINITAT NOVA FINALIZADO", color:"#2e7d32" },
-  { id:"g2", name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO", color:"#1b5e20" },
-  { id:"y1", name:"SERVICIO LA PAU FINALIZADO", color:"#fdd835" },
-  { id:"y2", name:"SERVICIO TRINITAT NOVA 2 FINALIZADO", color:"#fbc02d" },
-  { id:"b1", name:"SERVICIO VALL D'HEBRON FINALIZADO", color:"#1976d2" },
-  { id:"b2", name:"SERVICIO CORNELLA CENTRE FINALIZADO", color:"#1565c0" },
-  { id:"o1", name:"SOLICITUD SEGURIDAD", color:"#ff9800" },
-  { id:"m1", name:"SOLICITUD AAC", color:"#800020" },
-  { id:"m2", name:"CLIENTES NO SE ACERQUEN AL BORDE", color:"#5d4037" },
-  { id:"m3", name:"CLIENTES SE REPARTAN AL ANDÉN", color:"#009688" }
+  {id:"1", name:"ROJO 1", color:"#d32f2f"},
+  {id:"2", name:"ROJO 2", color:"#c62828"},
+  {id:"3", name:"AMARILLO 1", color:"#fdd835"},
+  {id:"4", name:"AMARILLO 2", color:"#fbc02d"},
+  {id:"5", name:"AZUL 1", color:"#1976d2"},
+  {id:"6", name:"AZUL 2", color:"#1565c0"},
 ];
 
 let active = JSON.parse(localStorage.getItem("active")) || [];
 let dragMode = false;
 
+let touchIndex = null;
+
 function save(){
   localStorage.setItem("active", JSON.stringify(active));
 }
 
-/* ICONO ☰ */
 function renderDragIcon(){
   const container = document.getElementById("leftIcons");
   const existing = document.getElementById("dragBtn");
@@ -195,52 +160,67 @@ function renderDragIcon(){
 
   if(active.length >= 2){
     const btn = document.createElement("div");
-    btn.id = "dragBtn";
-    btn.className = "iconBtn";
-    btn.textContent = "☰";
-    btn.onclick = toggleDragMode;
+    btn.id="dragBtn";
+    btn.className="iconBtn";
+    btn.textContent="☰";
+    btn.onclick=()=>{ dragMode=!dragMode; render(); };
     container.appendChild(btn);
   }else{
-    dragMode = false;
+    dragMode=false;
   }
 }
 
-/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
-  grid.innerHTML = "";
+  grid.innerHTML="";
 
-  active.forEach((id, index)=>{
+  active.forEach((id,index)=>{
     const it = items.find(x=>x.id===id);
 
     const div = document.createElement("div");
-    div.className = "pad";
-    div.style.background = it.color;
-    div.textContent = it.name;
+    div.className="pad";
+    div.style.background=it.color;
+    div.textContent=it.name;
 
-    const handle = document.createElement("div");
-    handle.className = "handle";
-    handle.textContent = "☰";
+    const handle=document.createElement("div");
+    handle.className="handle";
+    handle.textContent="☰";
     div.appendChild(handle);
 
+    /* TOUCH DRAG */
     if(dragMode){
-      div.draggable = true;
 
-      div.ondragstart = e=>{
-        e.dataTransfer.setData("from", index);
-      };
+      div.addEventListener("touchstart", ()=>{
+        touchIndex=index;
+      });
 
-      div.ondragover = e=>e.preventDefault();
+      div.addEventListener("touchmove", (e)=>{
+        e.preventDefault();
 
-      div.ondrop = e=>{
-        const from = parseInt(e.dataTransfer.getData("from"));
-        const tmp = active[from];
-        active[from] = active[index];
-        active[index] = tmp;
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
+        if(!element) return;
+
+        const target = element.closest(".pad");
+        if(!target) return;
+
+        const nodes = [...document.querySelectorAll(".pad")];
+        const newIndex = nodes.indexOf(target);
+
+        if(newIndex !== touchIndex){
+          const tmp = active[touchIndex];
+          active[touchIndex] = active[newIndex];
+          active[newIndex] = tmp;
+          touchIndex = newIndex;
+          render();
+        }
+      });
+
+      div.addEventListener("touchend", ()=>{
         save();
-        render();
-      };
+        touchIndex=null;
+      });
     }
 
     grid.appendChild(div);
@@ -248,36 +228,32 @@ function render(){
 
   document.body.classList.toggle("dragMode", dragMode);
 
-  /* 🔥 FIX VISIBILIDAD BOTON */
-  const addBtn = document.getElementById("centerAdd");
-  addBtn.style.display = active.length === 0 ? "block" : "none";
+  document.getElementById("centerAdd").style.display =
+    active.length === 0 ? "block" : "none";
 
   renderDragIcon();
 }
 
-/* MENU */
 function openMenu(){
-  document.getElementById("menu").style.display = "flex";
-
-  const list = document.getElementById("menuList");
-  list.innerHTML = "";
+  document.getElementById("menu").style.display="flex";
+  const list=document.getElementById("menuList");
+  list.innerHTML="";
 
   items.forEach(it=>{
-    const on = active.includes(it.id);
+    const on=active.includes(it.id);
 
-    const div = document.createElement("div");
-    div.className = "menuItem" + (on ? " used" : "");
-    div.style.background = it.color;
-    div.textContent = it.name;
+    const div=document.createElement("div");
+    div.className="menuItem"+(on?" used":"");
+    div.style.background=it.color;
+    div.textContent=it.name;
 
-    div.onclick = ()=>{
+    div.onclick=()=>{
       if(on){
-        active = active.filter(x=>x!==it.id);
+        active=active.filter(x=>x!==it.id);
       }else{
-        if(active.length >= MAX_VISIBLE) return;
+        if(active.length>=MAX_VISIBLE) return;
         active.push(it.id);
       }
-
       save();
       render();
       openMenu();
@@ -288,13 +264,7 @@ function openMenu(){
 }
 
 function closeMenu(){
-  document.getElementById("menu").style.display = "none";
-}
-
-function toggleDragMode(){
-  if(active.length < 2) return;
-  dragMode = !dragMode;
-  render();
+  document.getElementById("menu").style.display="none";
 }
 
 render();
