@@ -14,7 +14,6 @@ body{
   overflow:hidden;
 }
 
-/* TOPBAR */
 .topbar{
   position:fixed;
   top:0;
@@ -65,6 +64,7 @@ body{
   transition:transform .15s ease, opacity .15s ease;
 }
 
+/* selección visual */
 .selected{
   transform:scale(0.92);
   opacity:0.6;
@@ -81,6 +81,7 @@ body{
   padding:30px;
   border-radius:16px;
   font-weight:bold;
+  cursor:pointer;
   z-index:2000;
 }
 
@@ -115,7 +116,6 @@ body{
   border-radius:10px;
 }
 
-/* HELP */
 #help{
   position:fixed;
   bottom:15px;
@@ -182,16 +182,13 @@ function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* EDIT */
+/* EDIT MODE */
 function toggleEdit(){
 editMode=!editMode;
 selected=null;
 
 document.getElementById("help").style.display =
 editMode ? "block" : "none";
-
-document.getElementById("editBtn").style.color =
-editMode ? "#00bcd4" : "white";
 
 render();
 }
@@ -204,8 +201,8 @@ active[b]=tmp;
 save();
 }
 
-/* SELECCIÓN ROBUSTA */
-function select(i){
+/* CLICK SIMPLE (RESTAURADO SIMPLE Y FIABLE) */
+function handleClick(i){
 if(!editMode) return;
 
 if(selected===null){
@@ -221,13 +218,6 @@ swap(selected,i);
 selected=null;
 render();
 }
-}
-
-/* POINTER EVENTS (FIABLE MÓVIL + PC) */
-function bindTap(div,i){
-div.addEventListener("pointerup",()=>{
-select(i);
-});
 }
 
 /* RENDER */
@@ -247,7 +237,8 @@ if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-bindTap(div,i);
+/* SOLO CLICK NATIVO (IMPORTANTE PARA MÓVIL) */
+div.addEventListener("click",()=>handleClick(i));
 
 grid.appendChild(div);
 });
@@ -274,7 +265,7 @@ div.className="menuItem"+(on?" used":"");
 div.style.background=it.color;
 div.textContent=it.name;
 
-div.addEventListener("pointerup",()=>{
+div.onclick=()=>{
 if(on){
 active=active.filter(x=>x!==it.id);
 }else{
@@ -284,7 +275,7 @@ active.push(it.id);
 save();
 render();
 openMenu();
-});
+};
 
 list.appendChild(div);
 });
