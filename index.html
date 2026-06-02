@@ -14,22 +14,30 @@ body{
   overflow:hidden;
 }
 
+/* TOPBAR CENTRADA */
 .topbar{
   position:fixed;
   top:0;
   left:0;
   right:0;
   height:60px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 14px;
   background:#1e1e1e;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
   z-index:1000;
 }
 
 .leftIcons{display:flex;gap:12px;}
 .iconBtn{font-size:24px;cursor:pointer;}
+
+.title{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  font-weight:bold;
+}
 
 /* GRID */
 #grid{
@@ -53,17 +61,17 @@ body{
   font-weight:bold;
   user-select:none;
   -webkit-user-select:none;
-  touch-action:manipulation;
+  cursor:pointer;
   transition:transform .15s ease, opacity .15s ease;
 }
 
-/* selección */
 .selected{
   transform:scale(0.92);
   opacity:0.6;
   outline:3px solid white;
 }
 
+/* ADD */
 #addCenter{
   position:fixed;
   top:50%;
@@ -77,6 +85,7 @@ body{
   font-weight:bold;
 }
 
+/* MENU */
 #menu{
   position:fixed;
   inset:0;
@@ -94,6 +103,7 @@ body{
   border-radius:12px;
   text-align:center;
   font-weight:bold;
+  cursor:pointer;
 }
 
 .menuItem.used{opacity:0.3;}
@@ -105,18 +115,6 @@ body{
   text-align:center;
   border-radius:10px;
 }
-
-#help{
-  position:fixed;
-  bottom:15px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,0.8);
-  padding:10px 14px;
-  border-radius:12px;
-  font-size:13px;
-  display:none;
-}
 </style>
 </head>
 
@@ -125,9 +123,12 @@ body{
 <div class="topbar">
   <div class="leftIcons">
     <div class="iconBtn" onclick="openMenu()">＋</div>
-    <div id="editBtn" class="iconBtn" onclick="toggleEdit()" style="display:none;">☰</div>
+    <div class="iconBtn" id="editBtn" onclick="toggleEdit()" style="display:none;">☰</div>
   </div>
-  <div>MEGAFONIAPP</div>
+
+  <div class="title">MEGAFONIAPP</div>
+
+  <div style="width:40px;"></div>
 </div>
 
 <div id="addCenter" onclick="openMenu()">AÑADIR AUDIO</div>
@@ -137,8 +138,6 @@ body{
   <div id="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
-
-<div id="help">Toca un botón y luego otro para intercambiarlos</div>
 
 <script>
 
@@ -169,14 +168,10 @@ function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* EDIT */
+/* EDIT MODE */
 function toggleEdit(){
 editMode=!editMode;
 selected=null;
-
-document.getElementById("help").style.display =
-editMode ? "block" : "none";
-
 render();
 }
 
@@ -188,8 +183,8 @@ active[b]=tmp;
 save();
 }
 
-/* SELECCIÓN */
-function select(i){
+/* CLICK SIMPLE Y FIABLE */
+function handleClick(i){
 if(!editMode) return;
 
 if(selected===null){
@@ -220,16 +215,11 @@ div.className="pad";
 div.style.background=it.color;
 div.textContent=it.name;
 
-/* estado visual */
 if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-/* 🔥 FIX REAL MÓVIL + PC */
-div.addEventListener("pointerdown",(e)=>{
-e.preventDefault();
-select(i);
-});
+div.onclick=()=>handleClick(i);
 
 grid.appendChild(div);
 });
@@ -256,7 +246,7 @@ div.className="menuItem"+(on?" used":"");
 div.style.background=it.color;
 div.textContent=it.name;
 
-div.addEventListener("pointerdown",()=>{
+div.onclick=()=>{
 if(on){
 active=active.filter(x=>x!==it.id);
 }else{
@@ -266,7 +256,7 @@ active.push(it.id);
 save();
 render();
 openMenu();
-});
+};
 
 list.appendChild(div);
 });
