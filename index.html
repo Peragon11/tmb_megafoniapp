@@ -14,7 +14,6 @@ body{
   overflow:hidden;
 }
 
-/* TOP BAR */
 .topbar{
   position:fixed;
   top:0;
@@ -22,24 +21,16 @@ body{
   right:0;
   height:60px;
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  padding:0 15px;
+  align-items:center;
+  padding:0 14px;
   background:#1e1e1e;
   z-index:1000;
 }
 
-.left{
-  display:flex;
-  gap:12px;
-}
+.leftIcons{display:flex;gap:12px;}
+.iconBtn{font-size:24px;cursor:pointer;}
 
-.icon{
-  font-size:22px;
-  cursor:pointer;
-}
-
-/* GRID */
 #grid{
   position:fixed;
   top:60px;
@@ -52,7 +43,6 @@ body{
   padding:10px;
 }
 
-/* BOTONES */
 .pad{
   flex:1;
   display:flex;
@@ -64,19 +54,20 @@ body{
   user-select:none;
 }
 
+/* HANDLE LATERAL */
 .handle{
   position:absolute;
   left:10px;
   top:50%;
   transform:translateY(-50%);
+  font-size:18px;
   display:none;
 }
 
-.drag .handle{
+.editMode .handle{
   display:block;
 }
 
-/* BOTON CENTRAL */
 #addCenter{
   position:fixed;
   top:50%;
@@ -85,21 +76,22 @@ body{
   background:#2a2a2a;
   padding:30px;
   border-radius:16px;
-  z-index:2000;
   cursor:pointer;
+  z-index:2000;
 }
 
-/* MENU */
 #menu{
   position:fixed;
   inset:0;
-  background:#000;
+  background:rgba(0,0,0,0.92);
   display:none;
   flex-direction:column;
   z-index:3000;
 }
 
-.item{
+#menuList{flex:1;overflow:auto;padding:10px;}
+
+.menuItem{
   margin:10px;
   padding:18px;
   border-radius:12px;
@@ -107,31 +99,22 @@ body{
   font-weight:bold;
 }
 
-.item.used{
-  opacity:0.3;
-}
-
-.back{
-  margin:10px;
-  padding:15px;
-  background:#444;
-  text-align:center;
-  border-radius:10px;
-}
+.menuItem.used{opacity:0.3;}
+.back{margin:10px;padding:14px;background:#555;text-align:center;border-radius:10px;}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <div class="left" id="leftIcons">
-    <div class="icon" onclick="openMenu()">＋</div>
+  <div class="leftIcons">
+    <div class="iconBtn" onclick="openMenu()">＋</div>
+    <div id="editBtn" class="iconBtn" onclick="toggleEdit()" style="display:none;">☰</div>
   </div>
   <div>MEGAFONIAPP</div>
-  <div></div>
 </div>
 
-<div id="addCenter" onclick="openMenu()">＋ AÑADIR</div>
+<div id="addCenter" onclick="openMenu()">AÑADIR AUDIO</div>
 
 <div id="grid"></div>
 
@@ -142,163 +125,150 @@ body{
 
 <script>
 
-const MAX = 8;
+const MAX=8;
 
-const items = [
-  {id:"1",name:"ROJO 1",color:"#d32f2f"},
-  {id:"2",name:"ROJO 2",color:"#c62828"},
-  {id:"3",name:"VERDE",color:"#2e7d32"},
-  {id:"4",name:"AZUL",color:"#1976d2"},
-  {id:"5",name:"AMARILLO",color:"#fbc02d"},
-  {id:"6",name:"NARANJA",color:"#ff9800"},
-  {id:"7",name:"MARRON",color:"#5d4037"},
-  {id:"8",name:"GRIS",color:"#616161"},
-  {id:"9",name:"EXTRA",color:"#9c27b0"}
+const items=[
+{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:"#d32f2f"},
+{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828"},
+{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:"#7e57c2"},
+{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7"},
+{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#2e7d32"},
+{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20"},
+{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fdd835"},
+{id:"y2",name:"SERVICIO TRINITAT NOVA 2 FINALIZADO",color:"#fbc02d"},
+{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1976d2"},
+{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0"},
+{id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800"},
+{id:"m1",name:"SOLICITUD AAC",color:"#800020"},
+{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:"#5d4037"},
+{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:"#009688"}
 ];
 
-let active = JSON.parse(localStorage.getItem("active")) || [];
-let dragMode = false;
-let dragging = null;
+let active=JSON.parse(localStorage.getItem("active"))||[];
+let editMode=false;
+let dragIndex=null;
 
-/* GUARDAR */
 function save(){
-  localStorage.setItem("active",JSON.stringify(active));
+localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* ICONO ORDEN */
-function renderDragBtn(){
-  const left = document.getElementById("leftIcons");
-  const old = document.getElementById("dragBtn");
-  if(old) old.remove();
+/* BOTON EDIT */
+function updateEditBtn(){
+const btn=document.getElementById("editBtn");
+btn.style.display=active.length>=2?"block":"none";
+if(active.length<2) editMode=false;
+}
 
-  if(active.length >= 2){
-    const btn = document.createElement("div");
-    btn.id="dragBtn";
-    btn.className="icon";
-    btn.textContent="☰";
-    btn.onclick=()=>{
-      dragMode = !dragMode;
-      render();
-    };
-    left.appendChild(btn);
-  }else{
-    dragMode=false;
-  }
+/* TOGGLE EDIT */
+function toggleEdit(){
+editMode=!editMode;
+document.body.classList.toggle("editMode",editMode);
+render();
 }
 
 /* RENDER */
 function render(){
-  const grid = document.getElementById("grid");
-  grid.innerHTML="";
+const grid=document.getElementById("grid");
+grid.innerHTML="";
 
-  active.forEach((id,index)=>{
-    const it = items.find(x=>x.id===id);
+active.forEach((id,i)=>{
+const it=items.find(x=>x.id===id);
 
-    const div = document.createElement("div");
-    div.className="pad";
-    div.style.background=it.color;
-    div.textContent=it.name;
+const div=document.createElement("div");
+div.className="pad";
+div.style.background=it.color;
+div.textContent=it.name;
 
-    const handle = document.createElement("div");
-    handle.className="handle";
-    handle.textContent="☰";
-    div.appendChild(handle);
+/* HANDLE */
+if(editMode){
+const h=document.createElement("div");
+h.className="handle";
+h.textContent="☰";
+div.appendChild(h);
 
-    /* DRAG TOUCH + MOUSE */
-    if(dragMode){
+div.draggable=true;
 
-      div.onmousedown = ()=> dragging=index;
+/* PC */
+div.ondragstart=(e)=>dragIndex=i;
+div.ondragover=(e)=>e.preventDefault();
+div.ondrop=(e)=>{
+const tmp=active[dragIndex];
+active[dragIndex]=active[i];
+active[i]=tmp;
+render();
+};
 
-      div.onmousemove = (e)=>{
-        if(dragging===null) return;
-        const el = document.elementFromPoint(e.clientX,e.clientY);
-        move(el,index);
-      };
+/* MOBILE */
+div.ontouchstart=()=>dragIndex=i;
 
-      div.ontouchstart = ()=> dragging=index;
+div.ontouchmove=(e)=>{
+const t=e.touches[0];
+const el=document.elementFromPoint(t.clientX,t.clientY);
+const target=el?.closest(".pad");
+if(!target) return;
 
-      div.ontouchmove = (e)=>{
-        const t = e.touches[0];
-        const el = document.elementFromPoint(t.clientX,t.clientY);
-        move(el,index);
-      };
+const nodes=[...document.querySelectorAll(".pad")];
+const to=nodes.indexOf(target);
 
-      div.onmouseup = stop;
-      div.ontouchend = stop;
-    }
+if(to!==dragIndex && to>=0){
+const tmp=active[dragIndex];
+active[dragIndex]=active[to];
+active[to]=tmp;
+dragIndex=to;
+render();
+}
+};
 
-    grid.appendChild(div);
-  });
-
-  document.body.classList.toggle("drag",dragMode);
-
-  document.getElementById("addCenter").style.display =
-    active.length===0 ? "block":"none";
-
-  renderDragBtn();
+div.ontouchend=()=>{
+save();
+dragIndex=null;
+};
 }
 
-/* MOVER */
-function move(el,from){
-  if(!el) return;
-  const target = el.closest(".pad");
-  if(!target) return;
+grid.appendChild(div);
+});
 
-  const nodes = [...document.querySelectorAll(".pad")];
-  const to = nodes.indexOf(target);
+document.getElementById("addCenter").style.display=
+active.length===0?"block":"none";
 
-  if(to===-1 || to===from) return;
-
-  const tmp = active[from];
-  active[from]=active[to];
-  active[to]=tmp;
-
-  dragging = to;
-
-  render();
-}
-
-/* FIN DRAG */
-function stop(){
-  dragging=null;
-  save();
+updateEditBtn();
 }
 
 /* MENU */
 function openMenu(){
-  document.getElementById("menu").style.display="flex";
-  const list = document.getElementById("menuList");
-  list.innerHTML="";
+document.getElementById("menu").style.display="flex";
 
-  items.forEach(it=>{
-    const on = active.includes(it.id);
+const list=document.getElementById("menuList");
+list.innerHTML="";
 
-    const div=document.createElement("div");
-    div.className="item"+(on?" used":"");
-    div.style.background=it.color;
-    div.textContent=it.name;
+items.forEach(it=>{
+const on=active.includes(it.id);
 
-    div.onclick=()=>{
-      if(on){
-        active=active.filter(x=>x!==it.id);
-      }else{
-        if(active.length>=MAX) return;
-        active.push(it.id);
-      }
-      save();
-      render();
-      openMenu();
-    };
+const div=document.createElement("div");
+div.className="menuItem"+(on?" used":"");
+div.style.background=it.color;
+div.textContent=it.name;
 
-    list.appendChild(div);
-  });
+div.onclick=()=>{
+if(on){
+active=active.filter(x=>x!==it.id);
+}else{
+if(active.length>=MAX) return;
+active.push(it.id);
+}
+save();
+render();
+openMenu();
+};
+
+list.appendChild(div);
+});
 }
 
 function closeMenu(){
-  document.getElementById("menu").style.display="none";
+document.getElementById("menu").style.display="none";
 }
 
-/* INIT */
 render();
 
 </script>
