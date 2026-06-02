@@ -26,7 +26,6 @@ body{
   padding:0 14px;
   background:#1e1e1e;
   z-index:2000;
-  box-sizing:border-box;
 }
 
 .title{
@@ -43,7 +42,6 @@ body{
 .iconBtn{
   font-size:24px;
   cursor:pointer;
-  user-select:none;
 }
 
 #grid{
@@ -56,7 +54,7 @@ body{
   flex-direction:column;
   padding:8px;
   gap:10px;
-  box-sizing:border-box;
+  z-index:1;
 }
 
 .pad{
@@ -68,7 +66,6 @@ body{
   font-weight:bold;
   text-transform:uppercase;
   position:relative;
-  user-select:none;
 }
 
 .handle{
@@ -77,8 +74,6 @@ body{
   top:50%;
   transform:translateY(-50%);
   display:none;
-  font-size:22px;
-  cursor:grab;
 }
 
 .dragMode .handle{
@@ -106,7 +101,6 @@ body{
   border-radius:12px;
   text-align:center;
   font-weight:bold;
-  text-transform:uppercase;
   cursor:pointer;
 }
 
@@ -121,8 +115,6 @@ body{
   text-align:center;
   border-radius:10px;
   cursor:pointer;
-  font-weight:bold;
-  text-transform:uppercase;
 }
 
 .centerAdd{
@@ -136,14 +128,11 @@ body{
   text-align:center;
   cursor:pointer;
   font-weight:bold;
-  text-transform:uppercase;
-  display:none;
-  z-index:1500;
+  z-index:2500; /* 🔥 por encima de todo */
 }
 
 .centerAdd span{
   font-size:42px;
-  display:block;
 }
 </style>
 </head>
@@ -151,9 +140,8 @@ body{
 <body>
 
 <div class="topbar">
-  <div class="leftIcons">
+  <div class="leftIcons" id="leftIcons">
     <div class="iconBtn" onclick="openMenu()">＋</div>
-    <div class="iconBtn" onclick="toggleDragMode()">☰</div>
   </div>
   <div class="title">TMB MEGAFONIAPP</div>
   <div></div>
@@ -178,21 +166,15 @@ const MAX_VISIBLE = 8;
 const items = [
   { id:"r1", name:"SERVICIO FINALIZADO FONDO", color:"#d32f2f" },
   { id:"r2", name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO", color:"#c62828" },
-
   { id:"p1", name:"SERVICIO PARAL·LEL FINALIZADO", color:"#7e57c2" },
   { id:"p2", name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO", color:"#673ab7" },
-
   { id:"g1", name:"SERVICIO TRINITAT NOVA FINALIZADO", color:"#2e7d32" },
   { id:"g2", name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO", color:"#1b5e20" },
-
   { id:"y1", name:"SERVICIO LA PAU FINALIZADO", color:"#fdd835" },
   { id:"y2", name:"SERVICIO TRINITAT NOVA 2 FINALIZADO", color:"#fbc02d" },
-
   { id:"b1", name:"SERVICIO VALL D'HEBRON FINALIZADO", color:"#1976d2" },
   { id:"b2", name:"SERVICIO CORNELLA CENTRE FINALIZADO", color:"#1565c0" },
-
   { id:"o1", name:"SOLICITUD SEGURIDAD", color:"#ff9800" },
-
   { id:"m1", name:"SOLICITUD AAC", color:"#800020" },
   { id:"m2", name:"CLIENTES NO SE ACERQUEN AL BORDE", color:"#5d4037" },
   { id:"m3", name:"CLIENTES SE REPARTAN AL ANDÉN", color:"#009688" }
@@ -205,23 +187,31 @@ function save(){
   localStorage.setItem("active", JSON.stringify(active));
 }
 
-/* =========================
-   LIMITADOR 8 BOTONES
-========================= */
-function canAdd(){
-  return active.length < MAX_VISIBLE;
+/* ICONO ☰ */
+function renderDragIcon(){
+  const container = document.getElementById("leftIcons");
+  const existing = document.getElementById("dragBtn");
+  if(existing) existing.remove();
+
+  if(active.length >= 2){
+    const btn = document.createElement("div");
+    btn.id = "dragBtn";
+    btn.className = "iconBtn";
+    btn.textContent = "☰";
+    btn.onclick = toggleDragMode;
+    container.appendChild(btn);
+  }else{
+    dragMode = false;
+  }
 }
 
-/* =========================
-   RENDER
-========================= */
+/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
   active.forEach((id, index)=>{
     const it = items.find(x=>x.id===id);
-    if(!it) return;
 
     const div = document.createElement("div");
     div.className = "pad";
@@ -236,25 +226,21 @@ function render(){
     if(dragMode){
       div.draggable = true;
 
-      div.addEventListener("dragstart", e=>{
+      div.ondragstart = e=>{
         e.dataTransfer.setData("from", index);
-      });
+      };
 
-      div.addEventListener("dragover", e=>e.preventDefault());
+      div.ondragover = e=>e.preventDefault();
 
-      div.addEventListener("drop", e=>{
-        e.preventDefault();
-
+      div.ondrop = e=>{
         const from = parseInt(e.dataTransfer.getData("from"));
-        const to = index;
-
         const tmp = active[from];
-        active[from] = active[to];
-        active[to] = tmp;
+        active[from] = active[index];
+        active[index] = tmp;
 
         save();
         render();
-      });
+      };
     }
 
     grid.appendChild(div);
@@ -262,16 +248,16 @@ function render(){
 
   document.body.classList.toggle("dragMode", dragMode);
 
-  document.getElementById("centerAdd").style.display =
-    active.length === 0 ? "block" : "none";
+  /* 🔥 FIX VISIBILIDAD BOTON */
+  const addBtn = document.getElementById("centerAdd");
+  addBtn.style.display = active.length === 0 ? "block" : "none";
+
+  renderDragIcon();
 }
 
-/* =========================
-   MENÚ CON LÍMITE
-========================= */
+/* MENU */
 function openMenu(){
-  const menu = document.getElementById("menu");
-  menu.style.display = "flex";
+  document.getElementById("menu").style.display = "flex";
 
   const list = document.getElementById("menuList");
   list.innerHTML = "";
@@ -285,11 +271,10 @@ function openMenu(){
     div.textContent = it.name;
 
     div.onclick = ()=>{
-
       if(on){
         active = active.filter(x=>x!==it.id);
       }else{
-        if(!canAdd()) return; // BLOQUEO SI 8
+        if(active.length >= MAX_VISIBLE) return;
         active.push(it.id);
       }
 
@@ -307,6 +292,7 @@ function closeMenu(){
 }
 
 function toggleDragMode(){
+  if(active.length < 2) return;
   dragMode = !dragMode;
   render();
 }
