@@ -52,20 +52,24 @@ body{
   font-weight:bold;
   position:relative;
   user-select:none;
+  touch-action:none;
 }
 
-/* HANDLE LATERAL */
 .handle{
   position:absolute;
   left:10px;
   top:50%;
   transform:translateY(-50%);
-  font-size:18px;
   display:none;
 }
 
 .editMode .handle{
   display:block;
+}
+
+/* highlight drag */
+.dragging{
+  opacity:0.6;
 }
 
 #addCenter{
@@ -100,7 +104,14 @@ body{
 }
 
 .menuItem.used{opacity:0.3;}
-.back{margin:10px;padding:14px;background:#555;text-align:center;border-radius:10px;}
+
+.back{
+  margin:10px;
+  padding:14px;
+  background:#555;
+  text-align:center;
+  border-radius:10px;
+}
 </style>
 </head>
 
@@ -115,7 +126,6 @@ body{
 </div>
 
 <div id="addCenter" onclick="openMenu()">AÑADIR AUDIO</div>
-
 <div id="grid"></div>
 
 <div id="menu">
@@ -146,23 +156,36 @@ const items=[
 
 let active=JSON.parse(localStorage.getItem("active"))||[];
 let editMode=false;
+
 let dragIndex=null;
+let startY=0;
+let ghost=null;
 
 function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
 /* BOTON EDIT */
-function updateEditBtn(){
+function updateEdit(){
 const btn=document.getElementById("editBtn");
 btn.style.display=active.length>=2?"block":"none";
 if(active.length<2) editMode=false;
+document.body.classList.toggle("editMode",editMode);
 }
 
-/* TOGGLE EDIT */
+/* TOGGLE */
 function toggleEdit(){
 editMode=!editMode;
-document.body.classList.toggle("editMode",editMode);
+updateEdit();
+render();
+}
+
+/* SWAP */
+function swap(a,b){
+const tmp=active[a];
+active[a]=active[b];
+active[b]=tmp;
+save();
 render();
 }
 
@@ -186,42 +209,49 @@ h.className="handle";
 h.textContent="☰";
 div.appendChild(h);
 
-div.draggable=true;
-
 /* PC */
-div.ondragstart=(e)=>dragIndex=i;
-div.ondragover=(e)=>e.preventDefault();
-div.ondrop=(e)=>{
-const tmp=active[dragIndex];
-active[dragIndex]=active[i];
-active[i]=tmp;
-render();
+div.draggable=true;
+div.ondragstart=()=>dragIndex=i;
+div.ondragover=e=>e.preventDefault();
+div.ondrop=()=>swap(dragIndex,i);
+
+/* MOBILE OPTIMIZADO */
+div.ontouchstart=(e)=>{
+dragIndex=i;
+startY=e.touches[0].clientY;
+
+ghost=div;
+div.classList.add("dragging");
 };
 
-/* MOBILE */
-div.ontouchstart=()=>dragIndex=i;
-
 div.ontouchmove=(e)=>{
-const t=e.touches[0];
-const el=document.elementFromPoint(t.clientX,t.clientY);
+const y=e.touches[0].clientY;
+
+/* solo feedback ligero, NO re-render */
+if(Math.abs(y-startY)<40) return;
+
+const el=document.elementFromPoint(
+e.touches[0].clientX,
+e.touches[0].clientY
+);
+
 const target=el?.closest(".pad");
 if(!target) return;
 
 const nodes=[...document.querySelectorAll(".pad")];
 const to=nodes.indexOf(target);
 
-if(to!==dragIndex && to>=0){
-const tmp=active[dragIndex];
-active[dragIndex]=active[to];
-active[to]=tmp;
+if(to!==dragIndex){
+swap(dragIndex,to);
 dragIndex=to;
-render();
+startY=y;
 }
 };
 
 div.ontouchend=()=>{
+if(ghost) ghost.classList.remove("dragging");
+ghost=null;
 save();
-dragIndex=null;
 };
 }
 
@@ -231,7 +261,7 @@ grid.appendChild(div);
 document.getElementById("addCenter").style.display=
 active.length===0?"block":"none";
 
-updateEditBtn();
+updateEdit();
 }
 
 /* MENU */
