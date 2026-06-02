@@ -14,7 +14,7 @@ body{
   overflow:hidden;
 }
 
-/* TOPBAR CENTRADA */
+/* TOPBAR */
 .topbar{
   position:fixed;
   top:0;
@@ -80,9 +80,8 @@ body{
   background:#2a2a2a;
   padding:30px;
   border-radius:16px;
-  cursor:pointer;
-  z-index:2000;
   font-weight:bold;
+  z-index:2000;
 }
 
 /* MENU */
@@ -115,6 +114,19 @@ body{
   text-align:center;
   border-radius:10px;
 }
+
+/* HELP */
+#help{
+  position:fixed;
+  bottom:15px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.8);
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:13px;
+  display:none;
+}
 </style>
 </head>
 
@@ -138,6 +150,8 @@ body{
   <div id="menuList"></div>
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
+
+<div id="help">Modo edición: toca un botón y luego otro para intercambiarlos</div>
 
 <script>
 
@@ -168,10 +182,17 @@ function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* EDIT MODE */
+/* EDIT */
 function toggleEdit(){
 editMode=!editMode;
 selected=null;
+
+document.getElementById("help").style.display =
+editMode ? "block" : "none";
+
+document.getElementById("editBtn").style.color =
+editMode ? "#00bcd4" : "white";
+
 render();
 }
 
@@ -183,8 +204,8 @@ active[b]=tmp;
 save();
 }
 
-/* CLICK SIMPLE Y FIABLE */
-function handleClick(i){
+/* SELECCIÓN ROBUSTA */
+function select(i){
 if(!editMode) return;
 
 if(selected===null){
@@ -200,6 +221,13 @@ swap(selected,i);
 selected=null;
 render();
 }
+}
+
+/* POINTER EVENTS (FIABLE MÓVIL + PC) */
+function bindTap(div,i){
+div.addEventListener("pointerup",()=>{
+select(i);
+});
 }
 
 /* RENDER */
@@ -219,7 +247,7 @@ if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-div.onclick=()=>handleClick(i);
+bindTap(div,i);
 
 grid.appendChild(div);
 });
@@ -246,7 +274,7 @@ div.className="menuItem"+(on?" used":"");
 div.style.background=it.color;
 div.textContent=it.name;
 
-div.onclick=()=>{
+div.addEventListener("pointerup",()=>{
 if(on){
 active=active.filter(x=>x!==it.id);
 }else{
@@ -256,7 +284,7 @@ active.push(it.id);
 save();
 render();
 openMenu();
-};
+});
 
 list.appendChild(div);
 });
