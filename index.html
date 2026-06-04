@@ -38,7 +38,6 @@ body{
   font-weight:bold;
 }
 
-/* GRID */
 #grid{
   position:fixed;
   top:60px;
@@ -64,14 +63,12 @@ body{
   transition:transform .15s ease, opacity .15s ease;
 }
 
-/* selección visual */
 .selected{
   transform:scale(0.92);
   opacity:0.6;
   outline:3px solid white;
 }
 
-/* ADD */
 #addCenter{
   position:fixed;
   top:50%;
@@ -85,7 +82,6 @@ body{
   z-index:2000;
 }
 
-/* MENU */
 #menu{
   position:fixed;
   inset:0;
@@ -139,7 +135,6 @@ body{
   </div>
 
   <div class="title">MEGAFONIAPP</div>
-
   <div style="width:40px;"></div>
 </div>
 
@@ -151,35 +146,62 @@ body{
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
-<div id="help">Modo edición: toca un botón y luego otro para intercambiarlos</div>
+<div id="help">Modo edición: selecciona un botón y luego otro para intercambiarlos</div>
 
 <script>
 
 const MAX=8;
 
+/* AUDIO CONFIG */
 const items=[
-{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:"#d32f2f"},
-{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828"},
-{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:"#7e57c2"},
-{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7"},
-{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#2e7d32"},
-{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20"},
-{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fdd835"},
-{id:"y2",name:"SERVICIO TRINITAT NOVA 2 FINALIZADO",color:"#fbc02d"},
-{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1976d2"},
-{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0"},
-{id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800"},
-{id:"m1",name:"SOLICITUD AAC",color:"#800020"},
-{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:"#5d4037"},
-{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:"#009688"}
+{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:"#d32f2f",audio:"audios/fondo.mp3"},
+{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828",audio:"audios/bellvitge.mp3"},
+{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:"#7e57c2",audio:"audios/parallel.mp3"},
+{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7",audio:"audios/pompeu.mp3"},
+{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#2e7d32",audio:"audios/trinitat.mp3"},
+{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20",audio:"audios/zona.mp3"},
+{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fdd835",audio:"audios/lapau.mp3"},
+{id:"y2",name:"SERVICIO TRINITAT NOVA 2 FINALIZADO",color:"#fbc02d",audio:"audios/trinitat2.mp3"},
+{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1976d2",audio:"audios/vall.mp3"},
+{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0",audio:"audios/cornella.mp3"},
+{id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800",audio:"audios/seguridad.mp3"},
+{id:"m1",name:"SOLICITUD AAC",color:"#800020",audio:"audios/aac.mp3"},
+{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:"#5d4037",audio:"audios/borde.mp3"},
+{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:"#009688",audio:"audios/anden.mp3"}
 ];
 
 let active=JSON.parse(localStorage.getItem("active"))||[];
 let editMode=false;
 let selected=null;
+let currentAudio=null;
 
+/* SAVE */
 function save(){
 localStorage.setItem("active",JSON.stringify(active));
+}
+
+/* AUDIO SAFE PLAY (FIX MÓVIL REAL) */
+function playAudio(src){
+try{
+if(currentAudio){
+currentAudio.pause();
+currentAudio.currentTime=0;
+}
+
+currentAudio=new Audio(src);
+currentAudio.volume=1;
+
+const playPromise=currentAudio.play();
+
+if(playPromise!==undefined){
+playPromise.catch(err=>{
+console.log("Audio bloqueado o error:",err);
+});
+}
+
+}catch(e){
+console.log("Error audio:",e);
+}
 }
 
 /* EDIT MODE */
@@ -187,8 +209,8 @@ function toggleEdit(){
 editMode=!editMode;
 selected=null;
 
-document.getElementById("help").style.display =
-editMode ? "block" : "none";
+document.getElementById("help").style.display=
+editMode?"block":"none";
 
 render();
 }
@@ -201,10 +223,20 @@ active[b]=tmp;
 save();
 }
 
-/* CLICK SIMPLE (RESTAURADO SIMPLE Y FIABLE) */
+/* CLICK LOGIC */
 function handleClick(i){
-if(!editMode) return;
+const id=active[i];
+const it=items.find(x=>x.id===id);
 
+/* MODO NORMAL -> AUDIO */
+if(!editMode){
+if(it && it.audio){
+playAudio(it.audio);
+}
+return;
+}
+
+/* MODO EDIT */
 if(selected===null){
 selected=i;
 }else{
@@ -218,6 +250,7 @@ swap(selected,i);
 selected=null;
 render();
 }
+render();
 }
 
 /* RENDER */
@@ -237,8 +270,7 @@ if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-/* SOLO CLICK NATIVO (IMPORTANTE PARA MÓVIL) */
-div.addEventListener("click",()=>handleClick(i));
+div.onclick=()=>handleClick(i);
 
 grid.appendChild(div);
 });
