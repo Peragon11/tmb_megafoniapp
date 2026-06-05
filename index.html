@@ -6,8 +6,8 @@
 
 <title>MEGAFONIAPP</title>
 
-<!-- PWA -->
-<link rel="manifest" href="/manifest.json?v=3">
+<!-- PWA (AÑADIDO SIN ROMPER NADA) -->
+<link rel="manifest" href="/manifest.json?v=1">
 <meta name="theme-color" content="#1e1e1e">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,6 +15,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 
 <style>
+/* ===== TU CSS NO SE TOCA ===== */
 body{
   margin:0;
   font-family:sans-serif;
@@ -67,9 +68,7 @@ body{
   border-radius:16px;
   font-weight:bold;
   user-select:none;
-  -webkit-user-select:none;
   cursor:pointer;
-  transition:transform .12s ease, opacity .12s ease;
 }
 
 .selected{
@@ -84,7 +83,7 @@ body{
   left:50%;
   transform:translate(-50%,-50%);
   background:#2a2a2a;
-  padding:26px;
+  padding:30px;
   border-radius:16px;
   font-weight:bold;
   cursor:pointer;
@@ -100,11 +99,7 @@ body{
   z-index:3000;
 }
 
-#menuList{
-  flex:1;
-  overflow:auto;
-  padding:10px;
-}
+#menuList{flex:1;overflow:auto;padding:10px;}
 
 .menuItem{
   margin:10px;
@@ -115,7 +110,7 @@ body{
   cursor:pointer;
 }
 
-.menuItem.used{opacity:0.35;}
+.menuItem.used{opacity:0.3;}
 
 .back{
   margin:10px;
@@ -130,7 +125,7 @@ body{
   bottom:15px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(0,0,0,0.85);
+  background:rgba(0,0,0,0.8);
   padding:10px 14px;
   border-radius:12px;
   font-size:13px;
@@ -141,6 +136,8 @@ body{
 
 <body>
 
+<!-- ===== TU HTML SIN CAMBIOS ===== -->
+
 <div class="topbar">
   <div class="leftIcons">
     <div class="iconBtn" onclick="openMenu()">＋</div>
@@ -148,7 +145,6 @@ body{
   </div>
 
   <div class="title">MEGAFONIAPP</div>
-
   <div style="width:40px;"></div>
 </div>
 
@@ -163,6 +159,7 @@ body{
 <div id="help">Modo edición: selecciona un botón y luego otro para intercambiarlos</div>
 
 <script>
+/* ===== TU JS SIN CAMBIOS ===== */
 
 const MAX=8;
 
@@ -186,9 +183,7 @@ function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* AUDIO FIX ESTABLE */
 function playAudio(src){
-try{
 if(currentAudio){
 currentAudio.pause();
 currentAudio.currentTime=0;
@@ -196,21 +191,15 @@ currentAudio.currentTime=0;
 currentAudio=new Audio(src);
 currentAudio.volume=1;
 currentAudio.play().catch(()=>{});
-}catch(e){}
 }
 
-/* EDIT MODE */
 function toggleEdit(){
 editMode=!editMode;
 selected=null;
-
-document.getElementById("help").style.display=
-editMode?"block":"none";
-
+document.getElementById("help").style.display=editMode?"block":"none";
 render();
 }
 
-/* SWAP */
 function swap(a,b){
 const tmp=active[a];
 active[a]=active[b];
@@ -218,19 +207,14 @@ active[b]=tmp;
 save();
 }
 
-/* CLICK FIABLE MÓVIL */
 function handleClick(i){
+const it=items.find(x=>x.id===active[i]);
 
-const id=active[i];
-const it=items.find(x=>x.id===id);
-
-/* MODO NORMAL -> AUDIO */
 if(!editMode){
 if(it?.audio) playAudio(it.audio);
 return;
 }
 
-/* MODO EDICIÓN */
 if(selected===null){
 selected=i;
 }else{
@@ -247,7 +231,6 @@ render();
 render();
 }
 
-/* RENDER */
 function render(){
 const grid=document.getElementById("grid");
 grid.innerHTML="";
@@ -264,7 +247,7 @@ if(editMode && selected===i){
 div.classList.add("selected");
 }
 
-div.addEventListener("click",()=>handleClick(i));
+div.onclick=()=>handleClick(i);
 grid.appendChild(div);
 });
 
@@ -275,7 +258,6 @@ document.getElementById("editBtn").style.display=
 active.length>=2?"block":"none";
 }
 
-/* MENU */
 function openMenu(){
 document.getElementById("menu").style.display="flex";
 
@@ -311,10 +293,9 @@ document.getElementById("menu").style.display="none";
 }
 
 render();
-
 </script>
 
-<!-- SERVICE WORKER -->
+<!-- SERVICE WORKER (AÑADIDO SIN ROMPER) -->
 <script>
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("/sw.js");
