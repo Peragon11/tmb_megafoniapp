@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>MEGAFONIAPP</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="/icon-192.png">
 
 <style>
 body{
@@ -58,7 +66,6 @@ body{
   border-radius:16px;
   font-weight:bold;
   user-select:none;
-  -webkit-user-select:none;
   cursor:pointer;
   transition:transform .15s ease, opacity .15s ease;
 }
@@ -152,7 +159,6 @@ body{
 
 const MAX=8;
 
-/* AUDIO CONFIG */
 const items=[
 {id:"r1",name:"SERVICIO FINALIZADO FONDO",color:"#d32f2f",audio:"audios/fondo.mp3"},
 {id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828",audio:"audios/bellvitge.mp3"},
@@ -160,14 +166,8 @@ const items=[
 {id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7",audio:"audios/pompeu.mp3"},
 {id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#2e7d32",audio:"audios/trinitat.mp3"},
 {id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20",audio:"audios/zona.mp3"},
-{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fdd835",audio:"audios/lapau.mp3"},
-{id:"y2",name:"SERVICIO TRINITAT NOVA 2 FINALIZADO",color:"#fbc02d",audio:"audios/trinitat2.mp3"},
-{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1976d2",audio:"audios/vall.mp3"},
-{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0",audio:"audios/cornella.mp3"},
 {id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800",audio:"audios/seguridad.mp3"},
-{id:"m1",name:"SOLICITUD AAC",color:"#800020",audio:"audios/aac.mp3"},
-{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:"#5d4037",audio:"audios/borde.mp3"},
-{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:"#009688",audio:"audios/anden.mp3"}
+{id:"m1",name:"SOLICITUD AAC",color:"#800020",audio:"audios/aac.mp3"}
 ];
 
 let active=JSON.parse(localStorage.getItem("active"))||[];
@@ -175,47 +175,27 @@ let editMode=false;
 let selected=null;
 let currentAudio=null;
 
-/* SAVE */
 function save(){
 localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* AUDIO SAFE PLAY (FIX MÓVIL REAL) */
 function playAudio(src){
-try{
 if(currentAudio){
 currentAudio.pause();
 currentAudio.currentTime=0;
 }
-
 currentAudio=new Audio(src);
 currentAudio.volume=1;
-
-const playPromise=currentAudio.play();
-
-if(playPromise!==undefined){
-playPromise.catch(err=>{
-console.log("Audio bloqueado o error:",err);
-});
+currentAudio.play().catch(()=>{});
 }
 
-}catch(e){
-console.log("Error audio:",e);
-}
-}
-
-/* EDIT MODE */
 function toggleEdit(){
 editMode=!editMode;
 selected=null;
-
-document.getElementById("help").style.display=
-editMode?"block":"none";
-
+document.getElementById("help").style.display=editMode?"block":"none";
 render();
 }
 
-/* SWAP */
 function swap(a,b){
 const tmp=active[a];
 active[a]=active[b];
@@ -223,20 +203,14 @@ active[b]=tmp;
 save();
 }
 
-/* CLICK LOGIC */
 function handleClick(i){
-const id=active[i];
-const it=items.find(x=>x.id===id);
+const it=items.find(x=>x.id===active[i]);
 
-/* MODO NORMAL -> AUDIO */
 if(!editMode){
-if(it && it.audio){
-playAudio(it.audio);
-}
+if(it?.audio) playAudio(it.audio);
 return;
 }
 
-/* MODO EDIT */
 if(selected===null){
 selected=i;
 }else{
@@ -253,7 +227,6 @@ render();
 render();
 }
 
-/* RENDER */
 function render(){
 const grid=document.getElementById("grid");
 grid.innerHTML="";
@@ -271,7 +244,6 @@ div.classList.add("selected");
 }
 
 div.onclick=()=>handleClick(i);
-
 grid.appendChild(div);
 });
 
@@ -282,7 +254,6 @@ document.getElementById("editBtn").style.display=
 active.length>=2?"block":"none";
 }
 
-/* MENU */
 function openMenu(){
 document.getElementById("menu").style.display="flex";
 
@@ -319,6 +290,13 @@ document.getElementById("menu").style.display="none";
 
 render();
 
+</script>
+
+<!-- SERVICE WORKER -->
+<script>
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("/sw.js");
+}
 </script>
 
 </body>
