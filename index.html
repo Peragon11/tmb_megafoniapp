@@ -57,10 +57,11 @@ body{
   padding:10px;
 }
 
+/* Estilos de los botones en la pantalla principal */
 .pad{
   flex:1;
   display:flex;
-  flex-direction:column; /* Permite organizar el texto en filas verticales */
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
@@ -73,15 +74,15 @@ body{
   transition:transform .15s ease, opacity .15s ease;
 }
 
-/* Estilos para las dos líneas de texto dentro del botón */
-.pad .line1 {
+/* Estilos comunes para las dos líneas de texto (Pantalla principal y Menú) */
+.line1 {
   font-size: 13px;
   opacity: 0.85;
   margin-bottom: 2px;
   text-transform: uppercase;
 }
 
-.pad .line2 {
+.line2 {
   font-size: 16px;
   text-transform: uppercase;
 }
@@ -116,13 +117,18 @@ body{
 
 #menuList{flex:1;overflow:auto;padding:10px;}
 
+/* Estilos de los botones en el menú de añadir */
 .menuItem{
   margin:10px;
-  padding:18px;
+  padding:14px 10px; /* Un poco más altos para acomodar cómodamente las dos líneas */
   border-radius:12px;
   text-align:center;
   font-weight:bold;
   cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
 }
 
 .menuItem.used{opacity:0.3;}
@@ -176,7 +182,6 @@ body{
 
 <script>
 
-// Cambiado el máximo de opciones permitidas a la vez de 8 a 6
 const MAX=6;
 
 /* TONOS UNIFICADOS EXACTOS */
@@ -192,7 +197,7 @@ const COLOR_TEJA = "#009688";
 
 /* AUDIO CONFIG */
 const items=[
-{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:COLOR_ROJO,audio:"audios/fondo.mp3"},
+{id:"r1",name:"SERVICIO FONDO FINALIZADO",color:COLOR_ROJO,audio:"audios/fondo.mp3"}, // Modificado el texto aquí
 {id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:COLOR_ROJO,audio:"audios/bellvitge.mp3"},
 {id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:COLOR_MORADO,audio:"audios/parallel.mp3"},
 {id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:COLOR_MORADO,audio:"audios/pompeu.mp3"},
@@ -214,7 +219,6 @@ try {
   if(saved) {
     active = JSON.parse(saved);
     if(!Array.isArray(active)) active = [];
-    // Si al cambiar el código hay guardados más de 6, lo recortamos de forma segura
     if(active.length > MAX) active = active.slice(0, MAX);
   }
 } catch(e) {
@@ -314,19 +318,11 @@ function render(){
     div.className="pad";
     div.style.background=it.color;
 
-    // Lógica inteligente para dividir los textos de servicio en dos filas exactas
+    // Formateo del texto de la pantalla principal en dos líneas exactas
     if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
-      // Extraemos el nombre de la estación quitando "SERVICIO " y " FINALIZADO"
       let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
-      
-      // Si es el caso especial de la palabra "FONDO" sola, mantenemos la coherencia
-      if(stationName === "FONDO") {
-        stationName = "FONDO";
-      }
-
       div.innerHTML = `<span class="line1">SERVICIO FINALIZADO</span><span class="line2">${stationName}</span>`;
     } else {
-      // Para opciones normales como las solicitudes de seguridad, AAC, etc.
       div.innerHTML = `<span class="line2">${it.name}</span>`;
     }
 
@@ -375,13 +371,20 @@ function renderMenuList(){
     const div = document.createElement("div");
     div.className = "menuItem" + (on ? " used" : "");
     div.style.background = it.color;
-    div.textContent = it.name;
+
+    // Formateo del menú de selección en dos líneas exactas, igual que la pantalla principal
+    if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
+      let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
+      div.innerHTML = `<span class="line1">SERVICIO FINALIZADO</span><span class="line2">${stationName}</span>`;
+    } else {
+      div.innerHTML = `<span class="line2">${it.name}</span>`;
+    }
 
     div.onclick = () => {
       if(on){
         active = active.filter(x => x !== it.id);
       } else {
-        if(active.length >= MAX) return; // Ahora detiene la inserción al llegar a 6
+        if(active.length >= MAX) return;
         active.push(it.id);
       }
       save();
