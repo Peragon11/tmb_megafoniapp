@@ -61,6 +61,8 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  text-align:center; /* SOLUCIÓN: Fuerza a que los textos largos de varias líneas se mantengan centrados */
+  padding:0 10px;    /* Margen interno para que el texto largo no toque los bordes del botón */
   border-radius:16px;
   font-weight:bold;
   user-select:none;
@@ -181,7 +183,7 @@ const items=[
 {id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_VERDE,audio:"audios/trinitat.mp3"},
 {id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:COLOR_VERDE,audio:"audios/zona.mp3"},
 {id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:COLOR_AMARILLO,audio:"audios/lapau.mp3"},
-{id:"y2",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_AMARILLO,audio:"audios/trinitat2.mp3"}, // Se quitó el '2' del nombre
+{id:"y2",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_AMARILLO,audio:"audios/trinitat2.mp3"},
 {id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:COLOR_AZUL,audio:"audios/vall.mp3"},
 {id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:COLOR_AZUL,audio:"audios/cornella.mp3"},
 {id:"o1",name:"SOLICITUD SEGURIDAD",color:COLOR_NARANJA,audio:"audios/seguridad.mp3"},
