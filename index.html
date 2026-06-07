@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MEGAFONIAPP</title>
 
-<!-- ENLACES PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1e1e1e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +18,6 @@ body{
   background:#121212;
   color:white;
   overflow:hidden;
-  /* SOLUCIÓN: Desactiva el recuadro azul de selección al pulsar en cualquier parte de la app */
   -webkit-tap-highlight-color: transparent; 
 }
 
@@ -62,6 +60,7 @@ body{
 .pad{
   flex:1;
   display:flex;
+  flex-direction:column; /* Permite organizar el texto en filas verticales */
   align-items:center;
   justify-content:center;
   text-align:center;
@@ -72,6 +71,19 @@ body{
   -webkit-user-select:none;
   cursor:pointer;
   transition:transform .15s ease, opacity .15s ease;
+}
+
+/* Estilos para las dos líneas de texto dentro del botón */
+.pad .line1 {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.pad .line2 {
+  font-size: 16px;
+  text-transform: uppercase;
 }
 
 .selected{
@@ -164,7 +176,8 @@ body{
 
 <script>
 
-const MAX=8;
+// Cambiado el máximo de opciones permitidas a la vez de 8 a 6
+const MAX=6;
 
 /* TONOS UNIFICADOS EXACTOS */
 const COLOR_ROJO = "#c62828";
@@ -201,6 +214,8 @@ try {
   if(saved) {
     active = JSON.parse(saved);
     if(!Array.isArray(active)) active = [];
+    // Si al cambiar el código hay guardados más de 6, lo recortamos de forma segura
+    if(active.length > MAX) active = active.slice(0, MAX);
   }
 } catch(e) {
   active = [];
@@ -298,7 +313,22 @@ function render(){
     const div=document.createElement("div");
     div.className="pad";
     div.style.background=it.color;
-    div.textContent=it.name;
+
+    // Lógica inteligente para dividir los textos de servicio en dos filas exactas
+    if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
+      // Extraemos el nombre de la estación quitando "SERVICIO " y " FINALIZADO"
+      let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
+      
+      // Si es el caso especial de la palabra "FONDO" sola, mantenemos la coherencia
+      if(stationName === "FONDO") {
+        stationName = "FONDO";
+      }
+
+      div.innerHTML = `<span class="line1">SERVICIO FINALIZADO</span><span class="line2">${stationName}</span>`;
+    } else {
+      // Para opciones normales como las solicitudes de seguridad, AAC, etc.
+      div.innerHTML = `<span class="line2">${it.name}</span>`;
+    }
 
     if(editMode && selected===i){
       div.classList.add("selected");
@@ -351,7 +381,7 @@ function renderMenuList(){
       if(on){
         active = active.filter(x => x !== it.id);
       } else {
-        if(active.length >= MAX) return;
+        if(active.length >= MAX) return; // Ahora detiene la inserción al llegar a 6
         active.push(it.id);
       }
       save();
