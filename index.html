@@ -109,7 +109,7 @@ body{
 #menu{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.92);
+  background:#000000; /* SOLUCIÓN: Cambiado a negro puro y totalmente opaco */
   display:none;
   flex-direction:column;
   z-index:3000;
@@ -194,7 +194,7 @@ const COLOR_NARANJA = "#ff9800";
 const COLOR_BURDEOS = "#800020";
 const COLOR_MARRON = "#5d4037";
 const COLOR_TEJA = "#009688";
-const COLOR_GRIS_OSCURO = "#37474f"; // Nuevo color libre para la opción de desalojar
+const COLOR_GRIS_OSCURO = "#37474f";
 
 /* AUDIO CONFIG */
 const items=[
@@ -212,7 +212,7 @@ const items=[
 {id:"m1",name:"SOLICITUD AAC",color:COLOR_BURDEOS,audio:"audios/aac.mp3"},
 {id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:COLOR_MARRON,audio:"audios/borde.mp3"},
 {id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:COLOR_TEJA,audio:"audios/anden.mp3"},
-{id:"m4",name:"DESALOJAR ESTACIÓN",color:COLOR_GRIS_OSCURO,audio:"audios/desalojar.mp3"} // Nueva opción integrada
+{id:"m4",name:"DESALOJAR ESTACIÓN",color:COLOR_GRIS_OSCURO,audio:"audios/desalojar.mp3"}
 ];
 
 let active=[];
@@ -320,7 +320,6 @@ function render(){
     div.className="pad";
     div.style.background=it.color;
 
-    // Formateo del texto de la pantalla principal en dos líneas exactas
     if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
       let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
       div.innerHTML = `<span class="line1">SERVICIO FINALIZADO</span><span class="line2">${stationName}</span>`;
@@ -374,7 +373,6 @@ function renderMenuList(){
     div.className = "menuItem" + (on ? " used" : "");
     div.style.background = it.color;
 
-    // Formateo del menú de selección en dos líneas exactas, igual que la pantalla principal
     if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
       let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
       div.innerHTML = `<span class="line1">SERVICIO FINALIZADO</span><span class="line2">${stationName}</span>`;
