@@ -120,7 +120,7 @@ body{
 /* Estilos de los botones en el menú de añadir */
 .menuItem{
   margin:10px;
-  padding:14px 10px; /* Un poco más altos para acomodar cómodamente las dos líneas */
+  padding:14px 10px; 
   border-radius:12px;
   text-align:center;
   font-weight:bold;
@@ -194,10 +194,11 @@ const COLOR_NARANJA = "#ff9800";
 const COLOR_BURDEOS = "#800020";
 const COLOR_MARRON = "#5d4037";
 const COLOR_TEJA = "#009688";
+const COLOR_GRIS_OSCURO = "#37474f"; // Nuevo color libre para la opción de desalojar
 
 /* AUDIO CONFIG */
 const items=[
-{id:"r1",name:"SERVICIO FONDO FINALIZADO",color:COLOR_ROJO,audio:"audios/fondo.mp3"}, // Modificado el texto aquí
+{id:"r1",name:"SERVICIO FONDO FINALIZADO",color:COLOR_ROJO,audio:"audios/fondo.mp3"},
 {id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:COLOR_ROJO,audio:"audios/bellvitge.mp3"},
 {id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:COLOR_MORADO,audio:"audios/parallel.mp3"},
 {id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:COLOR_MORADO,audio:"audios/pompeu.mp3"},
@@ -210,7 +211,8 @@ const items=[
 {id:"o1",name:"SOLICITUD SEGURIDAD",color:COLOR_NARANJA,audio:"audios/seguridad.mp3"},
 {id:"m1",name:"SOLICITUD AAC",color:COLOR_BURDEOS,audio:"audios/aac.mp3"},
 {id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:COLOR_MARRON,audio:"audios/borde.mp3"},
-{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:COLOR_TEJA,audio:"audios/anden.mp3"}
+{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:COLOR_TEJA,audio:"audios/anden.mp3"},
+{id:"m4",name:"DESALOJAR ESTACIÓN",color:COLOR_GRIS_OSCURO,audio:"audios/desalojar.mp3"} // Nueva opción integrada
 ];
 
 let active=[];
