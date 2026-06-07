@@ -35,7 +35,7 @@ body{
 }
 
 .leftIcons{display:flex;gap:12px;}
-.iconBtn{font-size:24px;cursor:pointer;}
+.iconBtn{font-size:24px;cursor:pointer;transition: color 0.15s ease;}
 
 .title{
   position:absolute;
@@ -116,6 +116,7 @@ body{
   background:#555;
   text-align:center;
   border-radius:10px;
+  cursor:pointer;
 }
 
 #help{
@@ -128,6 +129,8 @@ body{
   border-radius:12px;
   font-size:13px;
   display:none;
+  text-align:center;
+  white-space:nowrap;
 }
 </style>
 </head>
@@ -152,185 +155,222 @@ body{
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
-<div id="help">Modo edición: selecciona un botón y luego otro para intercambiarlos</div>
+<div id="help">Selecciona un botón y después otro para intercambiarlos.</div>
 
 <script>
 
 const MAX=8;
 
+/* TONOS UNIFICADOS EXACTOS */
+const COLOR_ROJO = "#c62828";
+const COLOR_MORADO = "#673ab7";
+const COLOR_VERDE = "#1b5e20";
+const COLOR_AMARILLO = "#fbc02d";
+const COLOR_AZUL = "#1565c0";
+const COLOR_NARANJA = "#ff9800";
+const COLOR_BURDEOS = "#800020";
+const COLOR_MARRON = "#5d4037";
+const COLOR_TEJA = "#009688";
+
 /* AUDIO CONFIG */
 const items=[
-{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:"#d32f2f",audio:"audios/fondo.mp3"},
-{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828",audio:"audios/bellvitge.mp3"},
-{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:"#7e57c2",audio:"audios/parallel.mp3"},
-{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7",audio:"audios/pompeu.mp3"},
-{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#2e7d32",audio:"audios/trinitat.mp3"},
-{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20",audio:"audios/zona.mp3"},
-{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fdd835",audio:"audios/lapau.mp3"},
-{id:"y2",name:"SERVICIO TRINITAT NOVA 2 FINALIZADO",color:"#fbc02d",audio:"audios/trinitat2.mp3"},
-{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1976d2",audio:"audios/vall.mp3"},
-{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0",audio:"audios/cornella.mp3"},
-{id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800",audio:"audios/seguridad.mp3"},
-{id:"m1",name:"SOLICITUD AAC",color:"#800020",audio:"audios/aac.mp3"},
-{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:"#5d4037",audio:"audios/borde.mp3"},
-{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:"#009688",audio:"audios/anden.mp3"}
+{id:"r1",name:"SERVICIO FINALIZADO FONDO",color:COLOR_ROJO,audio:"audios/fondo.mp3"},
+{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:COLOR_ROJO,audio:"audios/bellvitge.mp3"},
+{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:COLOR_MORADO,audio:"audios/parallel.mp3"},
+{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:COLOR_MORADO,audio:"audios/pompeu.mp3"},
+{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_VERDE,audio:"audios/trinitat.mp3"},
+{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:COLOR_VERDE,audio:"audios/zona.mp3"},
+{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:COLOR_AMARILLO,audio:"audios/lapau.mp3"},
+{id:"y2",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_AMARILLO,audio:"audios/trinitat2.mp3"}, // Se quitó el '2' del nombre
+{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:COLOR_AZUL,audio:"audios/vall.mp3"},
+{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:COLOR_AZUL,audio:"audios/cornella.mp3"},
+{id:"o1",name:"SOLICITUD SEGURIDAD",color:COLOR_NARANJA,audio:"audios/seguridad.mp3"},
+{id:"m1",name:"SOLICITUD AAC",color:COLOR_BURDEOS,audio:"audios/aac.mp3"},
+{id:"m2",name:"CLIENTES NO SE ACERQUEN AL BORDE",color:COLOR_MARRON,audio:"audios/borde.mp3"},
+{id:"m3",name:"CLIENTES SE REPARTAN AL ANDÉN",color:COLOR_TEJA,audio:"audios/anden.mp3"}
 ];
 
-let active=JSON.parse(localStorage.getItem("active"))||[];
+let active=[];
+try {
+  let saved = localStorage.getItem("active");
+  if(saved) {
+    active = JSON.parse(saved);
+    if(!Array.isArray(active)) active = [];
+  }
+} catch(e) {
+  active = [];
+}
+
 let editMode=false;
 let selected=null;
 let currentAudio=null;
 
 /* SAVE */
 function save(){
-localStorage.setItem("active",JSON.stringify(active));
+  localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* AUDIO SAFE PLAY (FIX MÓVIL REAL) */
+/* AUDIO SAFE PLAY */
 function playAudio(src){
-try{
-if(currentAudio){
-currentAudio.pause();
-currentAudio.currentTime=0;
-}
+  try{
+    if(currentAudio){
+      currentAudio.pause();
+      currentAudio.currentTime=0;
+    }
 
-currentAudio=new Audio(src);
-currentAudio.volume=1;
+    currentAudio=new Audio(src);
+    currentAudio.volume=1;
 
-const playPromise=currentAudio.play();
+    const playPromise=currentAudio.play();
 
-if(playPromise!==undefined){
-playPromise.catch(err=>{
-console.log("Audio bloqueado o error:",err);
-});
-}
-
-}catch(e){
-console.log("Error audio:",e);
-}
+    if(playPromise!==undefined){
+      playPromise.catch(err=>{
+        console.log("Audio bloqueado o error:",err);
+      });
+    }
+  }catch(e){
+    console.log("Error audio:",e);
+  }
 }
 
 /* EDIT MODE */
 function toggleEdit(){
-editMode=!editMode;
-selected=null;
+  editMode=!editMode;
+  selected=null;
 
-document.getElementById("help").style.display=
-editMode?"block":"none";
+  document.getElementById("help").style.display=editMode?"block":"none";
+  document.getElementById("editBtn").style.color = editMode ? "#ff4444" : "white";
 
-render();
+  render();
 }
 
 /* SWAP */
 function swap(a,b){
-const tmp=active[a];
-active[a]=active[b];
-active[b]=tmp;
-save();
+  const tmp=active[a];
+  active[a]=active[b];
+  active[b]=tmp;
+  save();
 }
 
 /* CLICK LOGIC */
 function handleClick(i){
-const id=active[i];
-const it=items.find(x=>x.id===id);
+  const id=active[i];
+  const it=items.find(x=>x.id===id);
 
-/* MODO NORMAL -> AUDIO */
-if(!editMode){
-if(it && it.audio){
-playAudio(it.audio);
-}
-return;
+  /* MODO NORMAL -> AUDIO */
+  if(!editMode){
+    if(it && it.audio){
+      playAudio(it.audio);
+    }
+    return;
+  }
+
+  /* MODO EDIT */
+  if(selected===null){
+    selected=i;
+    render();
+  }else{
+    if(selected===i){
+      selected=null;
+      render();
+      return;
+    }
+    swap(selected,i);
+    selected=null;
+    render();
+  }
 }
 
-/* MODO EDIT */
-if(selected===null){
-selected=i;
-}else{
-if(selected===i){
-selected=null;
-render();
-return;
-}
-
-swap(selected,i);
-selected=null;
-render();
-}
-render();
-}
-
-/* RENDER */
+/* RENDER PANTALLA PRINCIPAL */
 function render(){
-const grid=document.getElementById("grid");
-grid.innerHTML="";
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
 
-active.forEach((id,i)=>{
-const it=items.find(x=>x.id===id);
+  active.forEach((id,i)=>{
+    const it=items.find(x=>x.id===id);
+    if(!it) return;
 
-const div=document.createElement("div");
-div.className="pad";
-div.style.background=it.color;
-div.textContent=it.name;
+    const div=document.createElement("div");
+    div.className="pad";
+    div.style.background=it.color;
+    div.textContent=it.name;
 
-if(editMode && selected===i){
-div.classList.add("selected");
+    if(editMode && selected===i){
+      div.classList.add("selected");
+    }
+
+    div.onclick=()=>handleClick(i);
+    grid.appendChild(div);
+  });
+
+  if (active.length === 0) {
+    document.getElementById("addCenter").style.display = "block";
+  } else {
+    document.getElementById("addCenter").style.display = "none";
+  }
+
+  if (active.length >= 2) {
+    document.getElementById("editBtn").style.display = "block";
+  } else {
+    document.getElementById("editBtn").style.display = "none";
+  }
 }
 
-div.onclick=()=>handleClick(i);
-
-grid.appendChild(div);
-});
-
-document.getElementById("addCenter").style.display=
-active.length===0?"block":"none";
-
-document.getElementById("editBtn").style.display=
-active.length>=2?"block":"none";
-}
-
-/* MENU */
+/* MENÚ SELECCIÓN DE AUDIOS */
 function openMenu(){
-document.getElementById("menu").style.display="flex";
+  if (editMode) {
+    editMode = false;
+    selected = null;
+    document.getElementById("help").style.display = "none";
+    document.getElementById("editBtn").style.color = "white";
+    render();
+  }
 
-const list=document.getElementById("menuList");
-list.innerHTML="";
-
-items.forEach(it=>{
-const on=active.includes(it.id);
-
-const div=document.createElement("div");
-div.className="menuItem"+(on?" used":"");
-div.style.background=it.color;
-div.textContent=it.name;
-
-div.onclick=()=>{
-if(on){
-active=active.filter(x=>x!==it.id);
-}else{
-if(active.length>=MAX) return;
-active.push(it.id);
+  document.getElementById("menu").style.display = "flex";
+  renderMenuList();
 }
-save();
-render();
-openMenu();
-};
 
-list.appendChild(div);
-});
+function renderMenuList(){
+  const list = document.getElementById("menuList");
+  list.innerHTML = "";
+
+  items.forEach(it => {
+    const on = active.includes(it.id);
+
+    const div = document.createElement("div");
+    div.className = "menuItem" + (on ? " used" : "");
+    div.style.background = it.color;
+    div.textContent = it.name;
+
+    div.onclick = () => {
+      if(on){
+        active = active.filter(x => x !== it.id);
+      } else {
+        if(active.length >= MAX) return;
+        active.push(it.id);
+      }
+      save();
+      render(); 
+      renderMenuList(); 
+    };
+
+    list.appendChild(div);
+  });
 }
 
 function closeMenu(){
-document.getElementById("menu").style.display="none";
+  document.getElementById("menu").style.display = "none";
 }
 
+// Inicialización
 render();
 
-/* REGISTRO DEL SERVICE WORKER */
+/* REGISTRO DEL SERVICE WORKER (PWA) */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registrado con éxito', reg))
-      .catch(err => console.error('Error al registrar el Service Worker', err));
+      .then(reg => console.log('Service Worker registrado', reg))
+      .catch(err => console.error('Error Worker', err));
   });
 }
 
