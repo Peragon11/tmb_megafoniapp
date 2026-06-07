@@ -6,7 +6,7 @@
 <title>MEGAFONIAPP</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e1e1e">
+<meta name="theme-color" content="#1a1a1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -14,9 +14,9 @@
 <style>
 body{
   margin:0;
-  font-family:sans-serif;
-  background:#121212;
-  color:white;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:#1a1c1e; /* Fondo texturizado oscuro tipo consola */
+  color:#ffffff;
   overflow:hidden;
   -webkit-tap-highlight-color: transparent; 
 }
@@ -27,22 +27,27 @@ body{
   left:0;
   right:0;
   height:60px;
-  background:#1e1e1e;
+  background:#111215;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 14px;
+  padding:0 16px;
   z-index:1000;
+  border-bottom: 2px solid #252830;
 }
 
-.leftIcons{display:flex;gap:12px;}
-.iconBtn{font-size:24px;cursor:pointer;transition: color 0.15s ease;}
+.leftIcons{display:flex;gap:16px;}
+.iconBtn{font-size:22px;cursor:pointer;transition: color 0.15s ease;color:#a0a0a0;}
+.iconBtn:active{color:#ffffff;}
 
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-weight:bold;
+  font-weight:700;
+  font-size:15px;
+  letter-spacing: 2px;
+  color: #d1d5db;
 }
 
 #grid{
@@ -53,11 +58,12 @@ body{
   right:0;
   display:flex;
   flex-direction:column;
-  gap:10px;
-  padding:10px;
+  gap:14px;
+  padding:16px;
+  background:#16171b;
 }
 
-/* Estilos de los botones en la pantalla principal */
+/* --- BOTONES MECÁNICOS / FÍSICOS REALES --- */
 .pad{
   flex:1;
   display:flex;
@@ -65,32 +71,82 @@ body{
   align-items:center;
   justify-content:center;
   text-align:center;
-  padding:0 10px;
-  border-radius:16px;
-  font-weight:bold;
+  padding:0 16px;
+  border-radius:14px;
   user-select:none;
   -webkit-user-select:none;
   cursor:pointer;
-  transition:transform .15s ease, opacity .15s ease;
+  
+  /* Bisel físico del plástico del botón */
+  border-top: 2px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: 1px solid rgba(0, 0, 0, 0.25);
+  
+  /* El color de fondo se gestiona dinámicamente con degradado volumétrico en JS */
+  background-image: linear-gradient(to bottom, var(--pad-color-light), var(--pad-color-dark));
+  
+  /* SOMBRA 3D: Proyecta sombra oscura abajo para levantarlo, y brillo interno arriba */
+  box-shadow: 
+    0px 5px 0px #0b0c0e,                    /* Grosor o relieve inferior del botón despegado */
+    0px 6px 10px rgba(0, 0, 0, 0.6),        /* Sombra arrojada en la carcasa */
+    inset 0px 2px 3px rgba(255,255,255,0.25),/* Reflejo de luz en la parte superior */
+    inset 0px -3px 6px rgba(0,0,0,0.3);     /* Penumbra en la base interna del plástico */
+    
+  transition: transform 0.04s ease, box-shadow 0.04s ease, background-image 0.04s ease;
 }
 
-/* Estilos comunes para las dos líneas de texto (Pantalla principal y Menú) */
+/* MECÁNICA DE PULSACIÓN: El botón baja, se aplasta la sombra exterior e invierte la luz interna */
+.pad:active {
+  transform: translateY(4px); /* Se hunde físicamente hacia abajo */
+  
+  border-top: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Se elimina la sombra de relieve inferior porque ya ha tocado fondo */
+  box-shadow: 
+    0px 1px 0px #0b0c0e,
+    0px 1px 3px rgba(0, 0, 0, 0.8),
+    inset 0px 4px 6px rgba(0, 0, 0, 0.6),   /* Sombra de hundimiento interior */
+    inset 0px -1px 3px rgba(255,255,255,0.1);
+    
+  /* Invertimos el degradado para simular que ya no le da la luz directa */
+  background-image: linear-gradient(to bottom, var(--pad-color-dark), var(--pad-color-light));
+}
+
+/* --- TIPOGRAFÍA CON REFUERZO DE CONTRASTE --- */
 .line1 {
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 700;
   opacity: 0.85;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
   text-transform: uppercase;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  /* Sombra de texto limpia para despegar la letra de la superficie plástica */
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .line2 {
-  font-size: 16px;
+  font-size: 15px;
   text-transform: uppercase;
+  font-weight: 850;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  text-shadow: 0px 1.5px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Al pulsar, el texto acompaña al hundimiento rebajando su sombra */
+.pad:active .line1, .pad:active .line2 {
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .selected{
-  transform:scale(0.92);
-  opacity:0.6;
-  outline:3px solid white;
+  opacity:0.5;
+  outline:4px dashed #ffffff;
+  outline-offset: 4px;
+  transform: scale(0.96);
 }
 
 #addCenter{
@@ -98,62 +154,93 @@ body{
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  background:#2a2a2a;
-  padding:30px;
-  border-radius:16px;
-  font-weight:bold;
+  background:#111215;
+  color: #8e939e;
+  padding:24px 32px;
+  border-radius:14px;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing: 1px;
   cursor:pointer;
   z-index:2000;
+  border: 2px dashed #3a3d4a;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+#addCenter:active {
+  background: #090a0c;
+  color: #ffffff;
 }
 
 #menu{
   position:fixed;
   inset:0;
-  background:#000000;
+  background:#16171b; 
   display:none;
   flex-direction:column;
   z-index:3000;
 }
 
-#menuList{flex:1;overflow:auto;padding:10px;}
+#menuList{
+  flex:1;
+  overflow:auto;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
 
-/* Estilos de los botones en el menú de añadir */
 .menuItem{
-  margin:10px;
-  padding:14px 10px; 
-  border-radius:12px;
+  padding:16px; 
+  border-radius:14px;
   text-align:center;
-  font-weight:bold;
   cursor:pointer;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  background-image: linear-gradient(to bottom, var(--pad-color-light), var(--pad-color-dark));
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.3);
 }
 
-.menuItem.used{opacity:0.3;}
+.menuItem.used{
+  opacity:0.2;
+}
 
 .back{
-  margin:10px;
-  padding:14px;
-  background:#555;
+  margin:12px;
+  padding:16px;
+  background:#111215;
   text-align:center;
-  border-radius:10px;
+  border-radius:14px;
   cursor:pointer;
+  font-weight: 700;
+  font-size:14px;
+  border: 1px solid #252830;
+  color: #ffffff;
+  box-shadow: 0 3px 0px #000;
+}
+.back:active{
+  transform: translateY(2px);
+  box-shadow: 0 1px 0px #000;
 }
 
 #help{
   position:fixed;
-  bottom:15px;
+  bottom:16px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(0,0,0,0.8);
-  padding:10px 14px;
-  border-radius:12px;
-  font-size:13px;
+  background:#ffffff;
+  color: #000000;
+  padding:12px 20px;
+  border-radius:30px;
+  font-size:12px;
+  font-weight: 700;
   display:none;
   text-align:center;
   white-space:nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 </style>
 </head>
@@ -178,43 +265,44 @@ body{
   <div class="back" onclick="closeMenu()">ATRÁS</div>
 </div>
 
-<div id="help">Selecciona un botón y después otro para intercambiarlos.</div>
+<div id="help">Toca dos audios para intercambiar sus posiciones</div>
 
 <script>
 
 const MAX=6;
 
-/* TONOS UNIFICADOS EXACTOS */
-const COLOR_ROJO = "#c62828";
-const COLOR_MORADO = "#673ab7";
-const COLOR_VERDE = "#1b5e20";
-const COLOR_AMARILLO = "#fbc02d";
-const COLOR_AZUL = "#1565c0";
-const COLOR_NARANJA = "#ff9800";
-const COLOR_BURDEOS = "#800020";
-const COLOR_MARRON = "#5d4037";
-const COLOR_TEJA = "#009688";
-const COLOR_GRIS_OSCURO = "#37474f";
-const COLOR_GRIS_CLARO = "#78909c";
+/* TONOS BASE ORIGINALES AJUSTADOS PARA VOLUMEN (ZONA CLARA / ZONA OSCURA) */
+const ITEMS_COLORS = {
+  "#c62828": { light: "#e53935", dark: "#b71c1c" }, // Rojo
+  "#673ab7": { light: "#7e57c2", dark: "#4527a0" }, // Morado
+  "#1b5e20": { light: "#2e7d32", dark: "#1b5e20" }, // Verde
+  "#fbc02d": { light: "#fdd835", dark: "#f57f17" }, // Amarillo
+  "#1565c0": { light: "#1e88e5", dark: "#0d47a1" }, // Azul
+  "#ff9800": { light: "#ffa726", dark: "#e65100" }, // Naranja
+  "#800020": { light: "#9e1a36", dark: "#4a000f" }, // Burdeos
+  "#5d4037": { light: "#795548", dark: "#3e2723" }, // Marrón
+  "#009688": { light: "#00b0ff", dark: "#00796b" }, // Teja
+  "#37474f": { light: "#4f5b66", dark: "#263238" }, // Gris Oscuro
+  "#78909c": { light: "#90a4ae", dark: "#455a64" }  // Gris Claro
+};
 
-/* AUDIO CONFIG */
 const items=[
-{id:"r1",name:"SERVICIO FONDO FINALIZADO",color:COLOR_ROJO,audio:"audios/fondo.mp3"},
-{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:COLOR_ROJO,audio:"audios/bellvitge.mp3"},
-{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:COLOR_MORADO,audio:"audios/parallel.mp3"},
-{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:COLOR_MORADO,audio:"audios/pompeu.mp3"},
-{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_VERDE,audio:"audios/trinitat.mp3"},
-{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:COLOR_VERDE,audio:"audios/zona.mp3"},
-{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:COLOR_AMARILLO,audio:"audios/lapau.mp3"},
-{id:"y2",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:COLOR_AMARILLO,audio:"audios/trinitat.mp3"},
-{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:COLOR_AZUL,audio:"audios/vall.mp3"},
-{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:COLOR_AZUL,audio:"audios/cornella.mp3"},
-{id:"o1",name:"SOLICITUD SEGURIDAD",color:COLOR_NARANJA,audio:"audios/seguridad.mp3"},
-{id:"m1",name:"SOLICITUD AAC",color:COLOR_BURDEOS,audio:"audios/aac.mp3"},
-{id:"m2",name:"NO ACERCARSE AL BORDE DE ANDÉN",color:COLOR_MARRON,audio:"audios/borde.mp3"}, // Texto cambiado
-{id:"m3",name:"REPARTIRSE POR EL ANDÉN",color:COLOR_TEJA,audio:"audios/anden.mp3"},        // Texto cambiado
-{id:"m4",name:"DESALOJAR ESTACIÓN",color:COLOR_GRIS_OSCURO,audio:"audios/desalojar.mp3"},
-{id:"m5",name:"SOLICITUD LIMPIEZA",color:COLOR_GRIS_CLARO,audio:"audios/limpieza.mp3"}       // Texto cambiado
+{id:"r1",name:"SERVICIO FONDO FINALIZADO",color:"#c62828",audio:"audios/fondo.mp3"},
+{id:"r2",name:"SERVICIO HOSPITAL BELLVITGE FINALIZADO",color:"#c62828",audio:"audios/bellvitge.mp3"},
+{id:"p1",name:"SERVICIO PARAL·LEL FINALIZADO",color:"#673ab7",audio:"audios/parallel.mp3"},
+{id:"p2",name:"SERVICIO BADALONA POMPEU FABRA FINALIZADO",color:"#673ab7",audio:"audios/pompeu.mp3"},
+{id:"g1",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#1b5e20",audio:"audios/trinitat.mp3"},
+{id:"g2",name:"SERVICIO ZONA UNIVERSITARIA FINALIZADO",color:"#1b5e20",audio:"audios/zona.mp3"},
+{id:"y1",name:"SERVICIO LA PAU FINALIZADO",color:"#fbc02d",audio:"audios/lapau.mp3"},
+{id:"y2",name:"SERVICIO TRINITAT NOVA FINALIZADO",color:"#fbc02d",audio:"audios/trinitat.mp3"},
+{id:"b1",name:"SERVICIO VALL D'HEBRON FINALIZADO",color:"#1565c0",audio:"audios/vall.mp3"},
+{id:"b2",name:"SERVICIO CORNELLA CENTRE FINALIZADO",color:"#1565c0",audio:"audios/cornella.mp3"},
+{id:"o1",name:"SOLICITUD SEGURIDAD",color:"#ff9800",audio:"audios/seguridad.mp3"},
+{id:"m1",name:"SOLICITUD AAC",color:"#800020",audio:"audios/aac.mp3"},
+{id:"m2",name:"NO ACERCARSE AL BORDE DE ANDÉN",color:"#5d4037",audio:"audios/borde.mp3"},
+{id:"m3",name:"REPARTIRSE POR EL ANDÉN",color:"#009688",audio:"audios/anden.mp3"},
+{id:"m4",name:"DESALOJAR ESTACIÓN",color:"#37474f",audio:"audios/desalojar.mp3"},
+{id:"m5",name:"SOLICITUD LIMPIEZA",color:"#78909c",audio:"audios/limpieza.mp3"}
 ];
 
 let active=[];
@@ -233,46 +321,35 @@ let editMode=false;
 let selected=null;
 let currentAudio=null;
 
-/* SAVE */
 function save(){
   localStorage.setItem("active",JSON.stringify(active));
 }
 
-/* AUDIO SAFE PLAY */
 function playAudio(src){
   try{
     if(currentAudio){
       currentAudio.pause();
       currentAudio.currentTime=0;
     }
-
     currentAudio=new Audio(src);
     currentAudio.volume=1;
-
     const playPromise=currentAudio.play();
-
     if(playPromise!==undefined){
-      playPromise.catch(err=>{
-        console.log("Audio bloqueado o error:",err);
-      });
+      playPromise.catch(err=>console.log("Audio bloqueado:",err));
     }
   }catch(e){
     console.log("Error audio:",e);
   }
 }
 
-/* EDIT MODE */
 function toggleEdit(){
   editMode=!editMode;
   selected=null;
-
   document.getElementById("help").style.display=editMode?"block":"none";
-  document.getElementById("editBtn").style.color = editMode ? "#ff4444" : "white";
-
+  document.getElementById("editBtn").style.color = editMode ? "#ff4444" : "#a0a0a0";
   render();
 }
 
-/* SWAP */
 function swap(a,b){
   const tmp=active[a];
   active[a]=active[b];
@@ -280,20 +357,15 @@ function swap(a,b){
   save();
 }
 
-/* CLICK LOGIC */
 function handleClick(i){
   const id=active[i];
   const it=items.find(x=>x.id===id);
 
-  /* MODO NORMAL -> AUDIO */
   if(!editMode){
-    if(it && it.audio){
-      playAudio(it.audio);
-    }
+    if(it && it.audio){ playAudio(it.audio); }
     return;
   }
 
-  /* MODO EDIT */
   if(selected===null){
     selected=i;
     render();
@@ -309,7 +381,13 @@ function handleClick(i){
   }
 }
 
-/* RENDER PANTALLA PRINCIPAL */
+/* Inyecta las variables CSS de color para el gradiente 3D */
+function applyButtonVolume(element, colorHex) {
+  const scheme = ITEMS_COLORS[colorHex] || { light: colorHex, dark: colorHex };
+  element.style.setProperty('--pad-color-light', scheme.light);
+  element.style.setProperty('--pad-color-dark', scheme.dark);
+}
+
 function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
@@ -320,7 +398,7 @@ function render(){
 
     const div=document.createElement("div");
     div.className="pad";
-    div.style.background=it.color;
+    applyButtonVolume(div, it.color);
 
     if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
       let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
@@ -337,29 +415,18 @@ function render(){
     grid.appendChild(div);
   });
 
-  if (active.length === 0) {
-    document.getElementById("addCenter").style.display = "block";
-  } else {
-    document.getElementById("addCenter").style.display = "none";
-  }
-
-  if (active.length >= 2) {
-    document.getElementById("editBtn").style.display = "block";
-  } else {
-    document.getElementById("editBtn").style.display = "none";
-  }
+  document.getElementById("addCenter").style.display = (active.length === 0) ? "block" : "none";
+  document.getElementById("editBtn").style.display = (active.length >= 2) ? "block" : "none";
 }
 
-/* MENÚ SELECCIÓN DE AUDIOS */
 function openMenu(){
   if (editMode) {
     editMode = false;
     selected = null;
     document.getElementById("help").style.display = "none";
-    document.getElementById("editBtn").style.color = "white";
+    document.getElementById("editBtn").style.color = "#a0a0a0";
     render();
   }
-
   document.getElementById("menu").style.display = "flex";
   renderMenuList();
 }
@@ -373,7 +440,7 @@ function renderMenuList(){
 
     const div = document.createElement("div");
     div.className = "menuItem" + (on ? " used" : "");
-    div.style.background = it.color;
+    applyButtonVolume(div, it.color);
 
     if(it.name.startsWith("SERVICIO ") && it.name.endsWith(" FINALIZADO")){
       let stationName = it.name.replace("SERVICIO ", "").replace(" FINALIZADO", "");
@@ -402,15 +469,11 @@ function closeMenu(){
   document.getElementById("menu").style.display = "none";
 }
 
-// Inicialización
 render();
 
-/* REGISTRO DEL SERVICE WORKER (PWA) */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registrado', reg))
-      .catch(err => console.error('Error Worker', err));
+    navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error Worker', err));
   });
 }
 
